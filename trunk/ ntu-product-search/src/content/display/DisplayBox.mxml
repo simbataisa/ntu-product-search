@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingTop="0" paddingBottom="0"
+	horizontalGap="0" verticalGap="0" backgroundColor="#FFFFFF"
+	xmlns:display="content.display.*"
+ verticalScrollPolicy="auto" horizontalScrollPolicy="auto">
+<!--
+	<mx:Script>
+		<![CDATA[
+	
+			import flash.filters.DropShadowFilter;
+			import mx.controls.Alert;
+			
+		 function modifyFilter():void{
+		  	var shadow:int = filterPosition(viewControl,DropShadowFilter);
+		  	if(shadow > -1){
+		  		var myFilters:Array = viewControl.filters;
+		  		Alert.show("is " + shadow.toString());	
+		  	}
+		  	else
+		  		Alert.show("hell");
+		 } 
+			
+	function filterPosition(ob:Object, filterClass:Class):int {
+         for (var i:uint = 0; i < ob.filters.length; i++) {
+             if (ob.filters[i] is filterClass) {
+                 return i;
+             }
+         }
+         return -1;
+     }
+
+
+			
+		]]>
+	</mx:Script>
+-->
+	<mx:Style>
+		ControlBar{
+			padding-bottom:0;
+			padding-top:0;
+			padding-left:20;	
+		}
+	</mx:Style>
+	<mx:XML format="e4x" id="sort" xmlns="">
+		<root>
+			<editItem label="price ascending" type="radio"/>
+			<separator type="separator" />
+			<editItem label="price descending" type="radio"/>
+			<separator type="separator" />
+			<editItem label="rating ascending" type="radio"/>
+			<separator type="separator" />
+			<editItem label="rating descending" type="radio"/>
+			
+		</root>
+	</mx:XML>
+	<mx:XML format="e4x" id="zoom" xmlns="">
+		<root>
+			<editItem label="Zoom in"/>
+			<separator type="separator" />
+			<editItem label="Zoom out"/>
+		</root>
+	</mx:XML>
+	<mx:XML format="e4x" id="view" xmlns="">
+		<root>
+			<editItem label="Grid View"/>
+			<separator type="separator" />
+			<editItem label="List View"/>
+		</root>
+		
+	</mx:XML>
+	<!--
+				<separator type="separator" />
+			<editItem label="Column View"/>
+	-->
+	<mx:ControlBar id="viewControl" width="100%" backgroundAlpha="0.7">
+		<mx:PopUpMenuButton label="Sort by" dataProvider="{sort}" id="sortBut" 
+		labelField="@label" showRoot="false"  height="25"/>
+<!--	<mx:Spacer width="8%" /> -->
+		<mx:PopUpMenuButton label="zoom"  dataProvider="{zoom}" labelField="@label" showRoot="false"
+		icon="@Embed(source='/images/zoom2.png')" height="25" />
+	
+		<mx:PopUpMenuButton label="" labelField="@label" icon="@Embed(source='/images/viewIcon2.gif')" 
+			dataProvider="{view}" showRoot="false" height="25" itemClick="searchResults.itemClickHandler(event);"/>
+		<mx:Spacer width="1%" />
+		<mx:Button icon="@Embed(source='/images/prev.png')" width="15" id="prevPage"/>
+		<mx:TextInput width="30" text="1" maxChars="2" textAlign="right" id="page"/>	
+		<mx:Button icon="@Embed(source='/images/next.png')" width="15" id="nextPage"/>
+		<mx:Label id = "Nopage" color="#000000"/>
+		<mx:Spacer width="40%" />
+		<mx:Label text="Hits per page" />
+		<mx:NumericStepper id="pageHits" minimum="1" maximum="50" value="30"/> 
+	</mx:ControlBar>
+	<mx:HRule x="0" y="0" width="100%"/>
+	
+	<display:SearchResult id="searchResults" height="99%" width="100%">
+		
+	</display:SearchResult>
+<!--
+	<mx:MenuBar id="categoryBar" labelField="@label" width="100%">
+		<mx:XMLList id="categoryMenu" xmlns="">
+			<menuitem label="All Categories">
+				<menuitem label="Apparel" >
+					<menuitem label="Boy" />
+					<menuitem label="Girl" />
+				</menuitem>		
+				<menuitem label="Automotive" />
+			</menuitem>
+			<menuitem label="Shirt" />
+			<menuitem label="Dress" />
+			<menuitem label="Computer" />
+			<menuitem label="Children" />
+			<menuitem label="Car" />
+			<menuitem label="Laptop" />
+		</mx:XMLList>
+	</mx:MenuBar>
+-->
+</mx:VBox>

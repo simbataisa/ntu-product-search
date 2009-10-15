@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TabNavigator xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:navigation="content.navigation.*" paddingRight="0">
+
+	<!--<mx:VBox label="TextSearch">-->
+
+	
+	<navigation:TextSearchAcc id="textSearch" label="TextSearch" width="100%" height="95%"/>
+	<!--</mx:VBox>-->
+	<navigation:VisualSearchPanel id="visualSearch" label="VisualSearch" width="100%" height="95%"/>
+	<navigation:Upload label="uploadSearch" id="UploadSearch" width="100%" height="100%"/>
+	
+	
+</mx:TabNavigator>

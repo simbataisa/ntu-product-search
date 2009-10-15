@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" x="100" y = "100">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			private function processLogin():void{
+				//do the checking here
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mx:Form>
+		<mx:FormItem label="Username: ">
+			<mx:TextInput id="username" width="100%" />
+		</mx:FormItem>
+		<mx:FormItem label="Password">
+			<mx:TextInput id="password" width="100%" displayAsPassword="true"/>			
+		</mx:FormItem>
+		<mx:HBox>
+			<mx:Button label="login" click="processLogin();" />
+			<mx:Button label="cancel" click="PopUpManager.removePopUp(this);" />
+		</mx:HBox>
+	</mx:Form>
+</mx:TitleWindow>

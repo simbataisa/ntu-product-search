@@ -1,0 +1,35 @@
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center" paddingTop="20"  xmlns:ns1="content.navigation.*" width="100%" height="100%">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.states.*;
+            import mx.controls.*;
+            import mx.managers.*;
+            import mx.events.*;
+            import flash.events.*;
+            import flash.net.*;
+            import mx.controls.sliderClasses.Slider;
+           
+			[Bindable]
+			public var product:Object;
+			
+	
+			
+			private function ColorChange(e:ColorPickerEvent):void{
+				
+				Alert.show(e.color + " is pressed");
+			}
+		
+			
+		]]>
+	</mx:Script>
+	<mx:Canvas width="220" height="213">
+		<mx:Image  source="{product.primaryImage}" width="100%" height="100%" horizontalAlign="center" completeEffect="Fade"/>
+	</mx:Canvas>
+	<mx:Button label="search" id="searchVisual" />
+	<mx:Spacer height="12"/>
+	<mx:Label text="Choose a color"/>
+	<mx:ColorPicker id="ColorPick" visible="true"  width="128" height="42"/>
+	<mx:HRule width="286" height="2"/>
+	
+</mx:VBox>

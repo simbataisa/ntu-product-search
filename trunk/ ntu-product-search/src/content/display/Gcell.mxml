@@ -1,0 +1,140 @@
+<?xml version="1.0" ?>
+<!-- itemRenderers\htlist\myComponents\Thumbnail.mxml -->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+verticalGap="0" borderStyle="none" backgroundColor="white" backgroundAlpha="0" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+<mx:Script>
+ <![CDATA[
+
+import mx.effects.*;
+import mx.effects.effectClasses.*;
+import mx.events.*;
+import mx.core.*;
+import mx.events.FlexEvent;
+public var resizeInst:ResizeInstance;
+import mx.managers.DragManager;
+import mx.managers.PopUpManager;
+import mx.events.CloseEvent;
+
+       [Embed(source="/images/star.png")]
+	
+		public var star:Class;
+		[Embed(source="/images/greyStar.png")]
+		
+		public var greyStar:Class;
+		[Embed(source="/images/halfGrey.png")]
+		
+		public var halfStar:Class;
+		
+		[Embed(source="/images/camera.png")]
+		public var defaultImage:Class;
+		
+		public var results:XMLList;
+		
+		private function startDragHandler(e:MouseEvent):void{
+			var dragInitiator:Image = Image(e.currentTarget);
+			var dragSource:DragSource = new DragSource();
+			dragSource.addData(data, "product data");
+			var imageProxy:Image = new Image;
+			imageProxy.source = dragInitiator.source;
+			imageProxy.width = dragInitiator.width;
+			imageProxy.height = dragInitiator.height;
+			DragManager.doDrag(dragInitiator, dragSource, e, imageProxy);
+		}
+			public function handleMouse(event:MouseEvent):void
+			{
+			if (resizeInst)
+			resizeInst.reverse();
+			else
+			r.play([event.currentTarget],event.type==MouseEvent.MOUSE_OUT);
+			}
+
+		private function toShoppingSite():void{
+			var request:URLRequest = new URLRequest(data.url);
+			navigateToURL(request,"_blank");
+		}
+		
+ 	private function parseRating(rateData:String):void{
+	var rate:Number; 
+	if(rateData == "" ||rateData == null)
+		rate = 0;
+	else
+		rate = Number(rateData);
+		rateBox.removeAllChildren();	
+		//---------------------------------
+		for(var i:uint = 1; i<=5; i++){
+			var img:Image = new Image();
+			img.width = 10;
+			img.height = 10;
+			img.alpha = 0.7;
+			if(Number(i) <= rate){
+				img.source = star;
+			}
+			else if((Number(i)-0.25)>rate && (Number(i-1)+0.25) < rate){
+				img.source = halfStar;					
+			}
+	
+			else if(Number(i) > rate){
+				img.source = greyStar;
+			}
+			
+			rateBox.addChild(img);
+				}
+	}
+	/*public function showProductZoom(evt:ListEvent):void {
+		    var productWindow:ProductZoom = ProductZoom(PopUpManager.createPopUp(this, ProductZoom, true));
+		   	var index:Object = evt.currentTarget.selectedIndices;
+		    productWindow.addEventListener(CloseEvent.CLOSE, close);
+			productWindow.showCloseButton = true;
+		
+			productWindow.productName.text=results[index].name;
+			
+			productWindow.productText.text = results[index].description;
+			productWindow.PZ_pPrice.text = parsePrice(results[index].minRetail, results[index].maxRetail);
+			productWindow.Shopping_Url = results[index].url;
+		    productWindow.ScrollList = results;
+		    productWindow.curIndex = index;
+		    
+		    var imgs:Array = new Array();
+	
+			imgs.push(results[index].primaryImage);
+			var variant:XMLList = XMLList(results[index].variantImage);
+			for(var i:uint =0 ; i< variant.length(); i++)
+				imgs.push(variant[i]);
+			//imgs.push(data.primaryImage);
+			productWindow.images = imgs;
+		    
+		}*/
+		private function close(e:CloseEvent){
+				PopUpManager.removePopUp(ProductZoom(e.currentTarget));
+			}
+		public function doZoom(event:MouseEvent):void { 
+            if (zoomAll.isPlaying) { 
+               zoomAll.reverse(); 
+            } 
+            else { 
+ 
+                zoomAll.play([event.currentTarget], event.type == MouseEvent.MOUSE_OUT ? true : false); 
+            } 
+        } 
+        
+        
+
+
+]]>
+	</mx:Script>
+	
+
+	<mx:Zoom duration="300"  originX="0" originY="0" relevantProperties="true" id="zoomAll" zoomWidthTo="2" zoomHeightTo="2" zoomWidthFrom="1" 
+	zoomHeightFrom="1"  /> 
+<mx:Resize id="r" heightTo="180" heightFrom="80" widthFrom="55" widthTo="180"    
+	effectStart="resizeInst = ResizeInstance(event.effectInstance);" effectEnd ="resizeInst=null"/>
+	<mx:HBox>
+		<mx:Image  source="images/gui/shopping.png" toolTip="go shopping" click="toShoppingSite();" />
+		<mx:Image  source="images/gui/star.png" toolTip="favorite" />
+		<mx:Image source="images/gui/zoom2.png" toolTip="zoom"  click="outerDocument.showProductZoom()"/>	
+
+	</mx:HBox>
+<mx:Image id="image"  width="80" height="80" source="{data.primaryImage}" mouseMove="startDragHandler(event)" mouseOver="doZoom(event)" mouseOut="doZoom(event)"/>
+<mx:Label text="{data.name}" width="120" textAlign="left"/>
+<mx:HBox id="rateBox"  creationComplete="parseRating(data.rating)"  />
+</mx:VBox>
