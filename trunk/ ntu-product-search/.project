@@ -17,14 +17,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>bin-debug</name>
-			<type>2</type>
-			<location>/Users/EugeneMac/Documents/DWtest Site 2/ProductSearch-debug</location>
-		</link>
-		<link>
 			<name>bin-release1</name>
 			<type>2</type>
-			<location>/Users/EugeneMac/Documents/DWtest Site 2/ProductSearch-release</location>
+			<location>C:/Users/EugeneMac/Documents/DWtest Site 2/ProductSearch-release</location>
 		</link>
 	</linkedResources>
 </projectDescription>
