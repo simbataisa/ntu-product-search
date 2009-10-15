@@ -1,0 +1,189 @@
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" verticalScrollPolicy="off"  horizontalScrollPolicy="off"
+	 verticalGap="0" paddingBottom="0" backgroundAlpha="0"
+	dataChange="dataChangeHandler(event)"  >
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.controls.Image;
+			import mx.controls.List;
+			import mx.managers.PopUpManager;
+			import content.display.ProductZoom;
+			import mx.events.CloseEvent;
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.managers.DragManager;
+			import mx.core.DragSource;
+			import flash.events.MouseEvent;
+			
+			[Embed(source="/images/star.png")]
+		
+			public var star:Class;
+			[Embed(source="/images/greyStar.png")]
+			
+			public var greyStar:Class;
+			[Embed(source="/images/halfGrey.png")]
+			
+			public var halfStar:Class;
+			
+			[Embed(source="/images/camera.png")]
+			public var defaultImage:Class;
+			
+			
+			private function startDragHandler(e:MouseEvent):void{
+				var dragInitiator:Image = Image(e.currentTarget);
+				var dragSource:DragSource = new DragSource();
+				dragSource.addData(data, "product data");
+				var imageProxy:Image = new Image;
+				imageProxy.source = dragInitiator.source;
+				imageProxy.width = dragInitiator.width;
+				imageProxy.height = dragInitiator.height;
+				DragManager.doDrag(dragInitiator, dragSource, e, imageProxy);
+			}
+		      public function showProductZoom(evt:ListEvent):void {
+			   var productWindow:ProductZoom = ProductZoom(PopUpManager.createPopUp(this, ProductZoom, true));
+			   	var index:Object = evt.currentTarget.selectedIndices;
+			    productWindow.addEventListener(CloseEvent.CLOSE, close);
+				productWindow.showCloseButton = true;
+			
+				productWindow.productName.text=results[index].name;
+				
+				productWindow.productText.text = results[index].description;
+				productWindow.PZ_pPrice.text = parsePrice(results[index].minRetail, results[index].maxRetail);
+				productWindow.Shopping_Url = results[index].url;
+			    productWindow.ScrollList = results;
+			    productWindow.curIndex = index;
+			    
+			    var imgs:Array = new Array();
+		
+				imgs.push(results[index].primaryImage);
+				var variant:XMLList = XMLList(results[index].variantImage);
+				for(var i:uint =0 ; i< variant.length(); i++)
+					imgs.push(variant[i]);
+				//imgs.push(data.primaryImage);
+				productWindow.images = imgs;
+			    
+			}
+			
+			private function close(e:CloseEvent){
+				PopUpManager.removePopUp(ProductZoom(e.currentTarget));
+			}
+			
+			private function parsePrice(p1:String, p2:String):String{
+				var format:String = "";
+				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+					format += "N/A";
+				else
+					format += "$"+p1;
+					
+				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+					format += "-N/A";
+				else
+					format += "-$"+p2;					
+				return format;
+			}
+			
+			private function parseRating(rateData:String):void{
+				var rate:Number; 
+				if(rateData == "" ||rateData == null)
+					rate = 0;
+				else
+					rate = Number(rateData);
+				rateBox.removeAllChildren();	
+				//---------------------------------
+				for(var i:uint = 1; i<=5; i++){
+					var img:Image = new Image();
+					img.width = 10;
+					img.height = 10;
+					img.alpha = 0.7;
+					if(Number(i) <= rate){
+						img.source = star;
+					}
+					else if((Number(i)-0.25)>rate && (Number(i-1)+0.25) < rate){
+						img.source = halfStar;					
+					}
+
+				
+					else if(Number(i) > rate){
+						img.source = greyStar;
+					}
+					
+					rateBox.addChild(img);
+				}
+			}
+			
+			private function toShoppingSite():void{
+				var request:URLRequest = new URLRequest(data.url);
+				navigateToURL(request,"_blank");
+			}
+			
+			private function parseImage():void{
+				if(data.primaryImage == null || data.pimaryImage == ""){
+					pImage.source = defaultImage;
+				}
+				else pImage.source = data.primaryImage;
+			}
+			
+			private function dataChangeHandler(e:FlexEvent){
+				parseImage();
+				parseRating(data.rating);
+				pName.text =data.name;
+				pPrice.text=parsePrice(data.minRetail, data.maxRetail);
+				
+			}
+	
+    
+    import mx.effects.*;
+	import mx.effects.effectClasses.*;
+	import mx.events.*;
+	import mx.core.*;
+	public var resizeInst:ResizeInstance;
+
+	public function handleMouse(event:MouseEvent):void
+	{
+	if (resizeInst)
+	resizeInst.reverse();
+	else
+	r.play([event.currentTarget],event.type==MouseEvent.MOUSE_OUT);
+	}
+        
+    ]]>
+    	</mx:Script>
+    <mx:Resize id="r" heightTo="150" heightFrom="100" widthFrom="80" widthTo="80"  
+    	effectStart="resizeInst = ResizeInstance(event.effectInstance);" effectEnd ="resizeInst=null"/>
+		<mx:HBox id="control"  visible="false" >
+			<mx:Image  source="images/gui/shopping.png" toolTip="go shopping" click="toShoppingSite();" />
+			<mx:Image  source="images/gui/star.png" toolTip="favorite"/>
+			<mx:Image source="images/gui/zoom2.png" toolTip="zoom" click="showProductZoom(event)" />
+		</mx:HBox>
+		
+<mx:Image id="pImage" width="80" height="100" mouseMove="startDragHandler(event)"  mouseOver="handleMouse(event)" mouseOut="handleMouse(event)">
+			</mx:Image>
+			
+			<!--<mx:rollOverEffect>
+				<mx:Zoom zoomHeightTo="1.5" zoomWidthTo="1.5" duration="1000" />
+			</mx:rollOverEffect>
+			
+			<mx:rollOutEffect>
+				<mx:Zoom zoomHeightTo="1.0" zoomWidthTo="1.0" duration="1000" />
+			</mx:rollOutEffect>-->
+			
+		
+	
+			<mx:Grid visible="false"  >
+				<mx:GridRow>
+					<mx:GridItem colSpan="2" > 
+						<mx:Label id="pName"  width="120" />
+					</mx:GridItem>
+				</mx:GridRow>
+				<mx:GridRow>
+					<mx:GridItem colSpan="2" >			
+						<mx:Label  id="pPrice" color="#990000"/>
+					</mx:GridItem>
+				</mx:GridRow>
+				<mx:GridRow>
+					<mx:GridItem colSpan="2" >			
+						<mx:HBox id="rateBox"  />
+					</mx:GridItem>
+				</mx:GridRow>
+			</mx:Grid>	
+</mx:VBox>

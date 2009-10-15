@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center" verticalAlign="middle"
+	horizontalScrollPolicy="off" verticalScrollPolicy="off">
+	<mx:Image source="{data.primaryImage}" width="20" height="20"/>
+	<mx:Label text="{data.name}" width="20"/>
+</mx:VBox>

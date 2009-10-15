@@ -1,0 +1,28 @@
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center" paddingTop="20"  xmlns:ns1="content.navigation.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.states.*;
+            import mx.controls.*;
+            import mx.managers.*;
+            import mx.events.*;
+            import flash.events.*;
+            import flash.net.*;
+            private var _loader:Loader;
+       		[Bindable]
+       		 public var U_url:String;
+  
+				
+			
+		]]>
+	</mx:Script>
+	<mx:Image id="U_image"    width="220" height="250" autoLoad="true"  horizontalAlign="center" completeEffect="Fade"/>
+	<mx:HBox width="100%" height="27" horizontalAlign="center">
+		<mx:Button label="Upload File" id="UploadButton"/>
+	</mx:HBox>
+	<mx:Canvas width="95%" height="60%">
+		
+	</mx:Canvas>
+	<mx:NumberFormatter id="numberFormatter" />
+	
+</mx:VBox>

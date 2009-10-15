@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	
+	xmlns:main="*"
+	layout="absolute"
+	width="100%" height="100%" verticalGap="0" horizontalGap="0" 
+	paddingTop="0" horizontalScrollPolicy="off" paddingLeft="0" paddingRight="0" paddingBottom="0"
+	backgroundGradientColors="[0xFFFFFF,0xAAAAAA]" 
+	themeColor="haloSilver"
+	>
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ItemClickEvent;
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+			import content.display.UserLogin;
+			import mx.events.ItemClickEvent;
+			import mx.controls.LinkButton;
+			import mx.skins.halo.LinkSeparator;
+			private var menu:Array = new Array("home", "login", "profile");
+			public function showLogin():void{
+				var userWin:IFlexDisplayObject = PopUpManager.createPopUp(this,UserLogin, true);
+			}
+			public function menuClickHandler(evt:ItemClickEvent){
+				
+				var item = evt.label;
+				
+				if(item=="login"){
+					mainView.selectedIndex = 0;
+					//topNavigate.
+					//showLogin();	
+					//topNavigate.getChildAt(0).;
+				}
+				
+				
+			}
+			
+			private function addLoginBut():void{
+				var loginBut:LinkButton = new LinkButton();
+				loginBut.label="login";
+				//topNavigate.addChild(new LinkSeparator());
+				//topNavigate.addChildAt(loginBut, 3);
+			}
+		]]>
+	</mx:Script>
+<!--
+	<mx:HBox width="100%">
+		<mx:Spacer width="70%" />
+-->	
+
+	<!-- </mx:HBox> -->
+	<mx:ViewStack id="mainView" width="100%" height="100%" paddingTop="0">
+
+		<main:HomeCanvas id="homePage" label="home" width="100%" height="100%" >
+			
+		</main:HomeCanvas>
+		<main:UserCanvas id="userPage" label="login" width="100%" height="100%" >
+			
+		</main:UserCanvas>
+		
+		<mx:Canvas id="contact"  label="contact us" width="100%" height="100%" >
+			
+		</mx:Canvas>
+	</mx:ViewStack>
+		<mx:Image source="@Embed(source='/images/PSlogo.png')" maintainAspectRatio="true" height="50" x="10" />
+		<mx:LinkBar id="topNavigate"  dataProvider="{mainView}"  right="10"  >
+
+		</mx:LinkBar>
+<!--	
+	<mx:Style>
+		.headBar{
+			background-alpha:1;
+			background-color:#000000;
+				
+		}
+
+	</mx:Style>
+	<mx:XMLList id="user" xmlns="">
+		< label="sign up" />
+		<item label="log in" />
+		<item label="profile" />
+	</mx:XMLList>
+	<mx:LinkBar dataProvider="{user}" labelField="@label">	
+	</mx:LinkBar>
+	<header:HeadBox >
+		
+	</header:HeadBox>
+	<mx:Spacer height="10%" />
+	<content:ContentBox styleName="content">
+	
+	</content:ContentBox> -->
+	<!--<mx:HBox x="92" y="21" width="80%">
+		<mx:Label text="Query" width="61"/>
+		<mx:TextInput/>
+		<mx:Button label="Search"/>
+		<mx:PopUpButton label="PopUpButton"/>
+		<mx:PopUpMenuButton label="PopUpMenuButton" enabled="true"/>
+	</mx:HBox>
+	<mx:Panel x="92" y="91" width="80%" height="266" layout="absolute">
+		<mx:VDividedBox x="10" y="10" height="231" width="190">
+			<mx:Accordion width="191" height="200">
+				<mx:Form label="" width="100%" height="100%">
+				</mx:Form>
+				<mx:Panel label="" width="100%" height="100%">
+				</mx:Panel>
+				<mx:Canvas label="" width="100%" height="100%">
+				</mx:Canvas>
+			</mx:Accordion>
+		</mx:VDividedBox>
+		<mx:Canvas x="228" y="7" width="360" height="184">
+			<mx:VBox x="170" y="112" height="100%" width="139">
+			</mx:VBox>
+		</mx:Canvas>
+		<mx:MenuBar x="228" y="195" width="360"></mx:MenuBar>
+		<mx:PopUpButton x="228" y="195" label="PopUpButton"/>
+		<mx:LinkButton x="352" y="195" label="LinkButton" alpha="1.0" cornerRadius="20"/>
+		<mx:LinkButton x="426" y="195" label="LinkButton"/>
+		<mx:LinkButton x="506" y="195" label="LinkButton"/>
+	</mx:Panel>-->
+	<!--backgroundColor="#E5E5E5" -->
+</mx:Application>

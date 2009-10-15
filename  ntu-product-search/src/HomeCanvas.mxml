@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:main="*"
+	xmlns:content="content.*"
+	xmlns:display="content.display.*"
+	xmlns:navigation="content.navigation.*" 
+	xmlns:header="header.*"
+	horizontalAlign="center"
+	creationComplete="iniApp();"
+	>
+	<mx:Script source="controller/HomeCanvasAs.as" />
+	<mx:Style>
+		.headBar{
+			background-alpha:1;
+			background-color:#000000;
+				
+		}
+
+	</mx:Style>
+
+	<header:HeadBox id="headerBox" backgroundColor="#CCCCCC">
+		
+	</header:HeadBox>
+
+	<mx:ViewStack id="main"  width="100%" height="100%">
+		<main:WelcomePage id="welcomePage" label="welcome" width="100%" height="100%">		
+		</main:WelcomePage>
+		<content:ContentBox styleName="content" id="contentBox" width="100%" height="100%">	
+		</content:ContentBox>
+	</mx:ViewStack>
+</mx:VBox>

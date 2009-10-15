@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" height="70" width="100%" 
+	verticalAlign="bottom" verticalGap="2" >
+	
+	<mx:Style>
+	.popUp{
+		letter-spacing: 0;
+		color: white;
+		background-alpha: 0.7;
+		background-gradient-alphas: 0.5;
+		
+		background-color: black;
+		theme-color: black;
+		border-style:none;
+		border-alpha: 0.5;
+		
+	}
+	.menu{
+		background-alpha: 0.5;
+		color: #FFFFFF;
+		letter-spacing: 0;
+		fill-colors: #000000, #000000;	
+		theme-color: #000000;
+		
+	}
+	.comboBox {
+   		cornerRadius: 4;
+   		color: #ffffff;
+   		fillColors: #999999, #000000,#000000, #CCCCCC;
+   		backgroundAlpha: 0.7;
+   		useRollOver: true;
+   		rollOverColor: #666666;
+   		textRollOverColor: #000000;
+   		themeColor: #333333;
+  	 	letterSpacing: 0;
+	}
+	
+	.myBut{
+		color: #ffffff;
+		fillColors: #999999, #000000,#000000, #CCCCCC;
+		themeColor: #333333;
+	}
+
+	</mx:Style>
+	<mx:HBox width="100%" horizontalAlign="right" paddingRight="20">
+		<mx:Button label="Search" id="searchBut" styleName="myBut" />	
+		<mx:TextInput id="query" width="140"/>
+		<mx:ComboBox id="cateSelect"  width="160" styleName="comboBox" labelField="@label" dropDownStyleName="popUp"/>
+		
+	</mx:HBox>
+	
+	<mx:MenuBar width="100%" labelField="@label" id="menu"  styleName="menu" menuStyleName="popUp" backgroundAlpha="0.5"/>
+</mx:VBox>
