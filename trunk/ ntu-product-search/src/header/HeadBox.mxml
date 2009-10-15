@@ -44,7 +44,7 @@
 	}
 
 	</mx:Style>
-	<mx:HBox width="100%" horizontalAlign="right" paddingRight="20">
+	<mx:HBox width="100%" horizontalAlign="right" paddingRight="10">
 		<mx:Button label="Search" id="searchBut" styleName="myBut" />	
 		<mx:TextInput id="query" width="140"/>
 		<mx:ComboBox id="cateSelect"  width="160" styleName="comboBox" labelField="@label" dropDownStyleName="popUp"/>
