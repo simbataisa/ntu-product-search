@@ -24,7 +24,8 @@
 		]]>
 	</mx:Script>
 	<mx:Canvas width="220" height="213">
-		<mx:Image  source="{product.primaryImage}" width="100%" height="100%" horizontalAlign="center" completeEffect="Fade"/>
+		<mx:Image  source="C:/ProductSearch/images/{product.primaryImage}" width="100%"
+			 height="100%" horizontalAlign="center" completeEffect="Fade"/>
 	</mx:Canvas>
 	<mx:Button label="search" id="searchVisual" />
 	<mx:Spacer height="12"/>
