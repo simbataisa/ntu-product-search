@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" themeColor="haloSilver" 
+		  
+	horizontalScrollPolicy="off" verticalScrollPolicy="off"  verticalAlign="center" horizontalAlign="center">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ItemClickEvent;
+			import mx.events.MenuEvent;
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			import mx.containers.TitleWindow;
+			import content.display.ProductZoom;
+			import mx.events.FlexMouseEvent;
+			import mx.core.Application;
+			import mx.events.FlexEvent;
+			import mx.events.CloseEvent;
+			import mx.events.ListEvent;
+			import mx.effects.Zoom;
+			import mx.controls.Alert;
+			import mx.managers.DragManager;
+			import mx.core.*;
+			[Bindable]
+			public var results:A;
+			public var index:Object ;
+			
+			
+		
+		public function itemClickHandler(evt:MenuEvent):void{
+		 if(evt.type == MenuEvent.ITEM_CLICK){
+			
+		 	if(evt.label=="Grid View"){
+				
+		 		shopWindow.selectedIndex = 0;	
+		 	}
+		 	else if(evt.label=="List View"){
+	
+		 		shopWindow.selectedIndex = 1;
+		 	}
+	
+		 }	
+		}
+			public function setIndex(evt:ListEvent):void{
+				 index = evt.itemRenderer.data;
+				 //Alert.show("index" + index.name);
+				
+			}
+			public function unsetIndex(evt:ListEvent):void{
+				 index = null;
+				
+			}
+			
+			public function ListHandler(e:ListEvent):void{
+				
+				showProductZoom(e.itemRenderer.data);
+				
+			}
+			
+			public function showProductZoom(Curdata:Object):void {
+				 var productWindow:ProductZoom;
+			    productWindow = ProductZoom(PopUpManager.createPopUp(this, ProductZoom, true));
+
+			    productWindow.addEventListener(CloseEvent.CLOSE, close);
+				productWindow.showCloseButton = true;
+			
+				productWindow.productName.text=Curdata.name;
+				
+				productWindow.productText.text = Curdata.description;
+				productWindow.PZ_pPrice.text = parsePrice(Curdata.minRetail, Curdata.maxRetail);
+				productWindow.Shopping_Url = Curdata.url;
+			    productWindow.ScrollList = results;
+			  
+			    
+			    var imgs:Array = new Array();
+		
+				imgs.push(Curdata.primaryImage);
+				var variant:XMLList = XMLList(Curdata.variantImage);
+				for(var i:uint =0 ; i< variant.length(); i++)
+					imgs.push(variant[i]);
+				//imgs.push(data.primaryImage);
+				productWindow.images = imgs;
+			    
+			}
+			 private function parsePrice(p1:String, p2:String):String{
+				var format:String = "";
+				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+					format += "N/A";
+				else
+					format += "$"+p1;
+					
+				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+					format += "-N/A";
+				else
+					format += "-$"+p2;					
+				return format;
+			}
+				private function close(e:CloseEvent){
+				PopUpManager.removePopUp(ProductZoom(e.currentTarget));
+			}
+			
+
+			
+
+
+		
+		]]>
+	</mx:Script>
+	<mx:Style>
+		.gridView {
+			horizontal-gap:10;
+			vertical-gap:0;
+			padding-right:5;
+			padding-bottom:5;
+		
+		}
+		.header {
+			font-size:10;	
+		}
+		.status{
+			font-size:8;
+			color:#990000;	
+		}
+		.mainView{
+			border-thickness-left:0;
+			border-thickness-right: 0;
+		    border-thickness-bottom: 0;
+		    border-alpha: 0.5;
+		    border-color: #FFFFFF;
+		}
+	</mx:Style>
+	<mx:Style source="css/customVScroll.css" />
+	
+	
+	
+
+	
+	
+	<mx:Label width="100%" styleName="status" id="statusBar"/>
+	<mx:ViewStack id="shopWindow" width="100%" height="100%">
+
+	<mx:Canvas showEffect="WipeDown" hideEffect="WipeUp"  width="100%" height="100%" 
+		horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+		<mx:ControlBar showEffect="WipeDown" hideEffect="WipeUp" horizontalAlign="center"  width="100%" height="100%">
+			
+		
+		<mx:TileList id="gridResult" width="100%" height="100%"  dataProvider="{results}" verticalScrollPolicy="on"
+		 toolTip="drag to left panel for visual search"  styleName="mainView" rowHeight="150" columnWidth="150"   
+		 itemRollOver="setIndex(event)" itemRollOut="unsetIndex(event)">
+		   <mx:itemRenderer>
+                <mx:Component>                           
+                    <mx:VBox horizontalScrollPolicy="off" horizontalAlign="center" verticalScrollPolicy="off" 
+                    	width="100%" height="100%" mouseOver="set_Visible(event)" mouseOut="unset_Visible(event)">
+                        <mx:Script>
+	                		<![CDATA[
+	                			import mx.effects.*;
+								import mx.effects.effectClasses.*;
+								import mx.events.*;
+								import mx.core.*;
+								import mx.events.FlexEvent;
+								public var resizeInst:ResizeInstance;
+								import mx.managers.DragManager;
+								import mx.managers.PopUpManager;
+								import mx.events.CloseEvent;
+								
+								[Embed(source="/images/star.png")]
+								
+								public var star:Class;
+								[Embed(source="/images/greyStar.png")]
+								
+								public var greyStar:Class;
+								[Embed(source="/images/halfGrey.png")]
+								
+								public var halfStar:Class;
+								
+								[Embed(source="/images/camera.png")]
+								public var defaultImage:Class;
+								
+								public var results:XMLList;
+								
+								private function startDragHandler(e:MouseEvent):void{
+									var dragInitiator:Image = Image(e.currentTarget);
+									var dragSource:DragSource = new DragSource();
+									dragSource.addData(data, "product data");
+									var imageProxy:Image = new Image;
+									imageProxy.source = dragInitiator.source;
+									imageProxy.width = dragInitiator.width;
+									imageProxy.height = dragInitiator.height;
+									DragManager.doDrag(dragInitiator, dragSource, e, imageProxy);
+								}
+								
+								
+								private function toShoppingSite():void{
+									var request:URLRequest = new URLRequest(data.url);
+									navigateToURL(request,"_blank");
+								}
+										
+								private function parseRating(rateData:String):void{
+									var rate:Number; 
+									if(rateData == "" ||rateData == null)
+										rate = 0;
+									else
+									rate = Number(rateData);
+									rateBox.removeAllChildren();	
+									//---------------------------------
+									for(var i:uint = 1; i<=5; i++){
+										var img:Image = new Image();
+										img.width = 10;
+										img.height = 10;
+										img.alpha = 0.7;
+										if(Number(i) <= rate){
+											img.source = star;
+										}
+										else if((Number(i)-0.25)>rate && (Number(i-1)+0.25) < rate){
+											img.source = halfStar;					
+										}
+								
+										else if(Number(i) > rate){
+											img.source = greyStar;
+										}
+										
+										rateBox.addChild(img);
+											}
+								}
+								
+								private function set_Visible(event:MouseEvent):void{
+										control.visible=true;
+									}
+								private function unset_Visible(event:MouseEvent):void{
+										control.visible=false;
+									}
+									
+								public function doZoom(event:MouseEvent):void { 
+								    if (zoomAll.isPlaying) { 
+								       zoomAll.reverse(); 
+								    } 
+								    else { 
+								 
+								        zoomAll.play([event.currentTarget], event.type == MouseEvent.MOUSE_OUT ? true : false); 
+								    } 
+								} 
+	                		]]>
+	                	</mx:Script>
+						<mx:Zoom duration="300"  originX="0" originY="0" relevantProperties="true" id="zoomAll" 
+							zoomWidthTo="2" zoomHeightTo="2" zoomWidthFrom="1" zoomHeightFrom="1"  /> 
+					
+						<mx:HBox id="control" visible="false" >
+							<mx:Image  source="images/gui/shopping.png" toolTip="go shopping" click="toShoppingSite();" />
+							<mx:Image  source="images/gui/star.png" toolTip="favorite" />
+							<mx:Image source="images/gui/zoom2.png" toolTip="zoom" click="outerDocument.showProductZoom(data)"  />	
+					
+						</mx:HBox>
+						<mx:Image id="image"  width="80" height="80" source="{data.primaryImage}" 
+							mouseMove="startDragHandler(event)" mouseOver="doZoom(event)" mouseOut="doZoom(event)"/>
+						<mx:Label text="{data.name}" width="120" textAlign="left"/>
+						<mx:HBox id="rateBox"  creationComplete="parseRating(data.rating)"  />
+					</mx:VBox>
+							  
+                </mx:Component>
+            </mx:itemRenderer>
+		   </mx:TileList>
+
+		 </mx:ControlBar>
+		
+	</mx:Canvas>
+	<mx:Canvas horizontalScrollPolicy="off" verticalScrollPolicy="off" showEffect="WipeDown" hideEffect="WipeUp">
+
+	<mx:List id="listResult" dataProvider="{results}" width="100%" wordWrap="true" height="100%"  
+		horizontalScrollPolicy="off" styleName="mainView" 
+		 itemRenderer="content.display.ListCell">
+	</mx:List>
+
+	</mx:Canvas>
+	
+	</mx:ViewStack>
+</mx:VBox>

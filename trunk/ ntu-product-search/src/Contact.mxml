@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+		]]>
+	</mx:Script>
+	<mx:VBox>
+		<mx:Grid borderThickness="2">
+			<mx:GridRow>
+				<mx:GridItem>
+					<mx:Label fontFamily="Arial" text="Telephone" fontWeight="bold" fontSize="12"/>					
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Label text="+65 9123456" fontSize="12"/>					
+				</mx:GridItem>
+			</mx:GridRow>
+			<mx:GridRow>
+				<mx:GridItem>
+					<mx:Label fontFamily="Arial" text="Email Address" fontWeight="bold" fontSize="12"/>					
+				</mx:GridItem>
+				<mx:GridItem>
+					<mx:Label text="hello@yahoo.com" fontSize="12"/>					
+				</mx:GridItem>
+			</mx:GridRow>			
+		</mx:Grid>
+	</mx:VBox>		
+</mx:Canvas>
