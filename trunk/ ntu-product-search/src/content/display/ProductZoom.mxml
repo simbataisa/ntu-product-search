@@ -4,21 +4,34 @@
 	xmlns:eff="com.adobe.effects.*" xmlns:views="views.*"
 	layout="vertical" 
 	height="100%" width="100%"
-	 textAlign="center" color="#333333" 
+	textAlign="center" color="#333333" 
 	backgroundColor="#000000" backgroundAlpha="0.9"
-	borderThicknessLeft="0" borderThicknessRight="0" borderThicknessTop="0" borderThicknessBottom="0"
+	borderThicknessLeft="0" borderThicknessRight="0" 
+	borderThicknessTop="0" borderThicknessBottom="0"
 	headerHeight="25" verticalScrollPolicy="off" horizontalScrollPolicy="off" 
-	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" 	xmlns:ns1="content.display.*"  xmlns:ns2="content.display.com.adobe.wheelerstreet.fig.panzoom.*" creationComplete="init()">
+	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" 	
+	xmlns:ns1="content.display.*"  
+	xmlns:ns2="content.display.com.adobe.wheelerstreet.fig.panzoom.*" 
+	creationComplete="init()">
 
-
-	
-	
 	<mx:Script>
 		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
 			import flash.events.Event;
 			import mx.events.ListEvent;
+			//Import classes so you don't have to use full names.
+            import mx.managers.DragManager;
+            import mx.core.DragSource;
+            import mx.events.*;
+            import flash.events.MouseEvent;
+            import mx.core.Application;
+            import mx.controls.Alert;
+            var fr:FileReference;
+            import mx.managers.PopUpManager;
+            
 			[Bindable]
-			public var images:Array;
+			public var images:ArrayCollection;
 			[Bindable]
 			public var currentImg:uint = 0;
 
@@ -26,117 +39,77 @@
 			public var pName:Text;
 			[Bindable]
 			public var Shopping_Url:String;	
+			
+			
+			/*--------------------------------------------------------------------------*/
 			[Bindable]
-			public var ScrollList:XMLList;
-			//Import classes so you don't have to use full names.
-            import mx.managers.DragManager;
-            import mx.core.DragSource;
-            import mx.events.DragEvent;
-            import flash.events.MouseEvent;
-             import mx.core.Application;
-             import mx.controls.Alert;
-              var fr:FileReference;
-              import mx.managers.PopUpManager;
-        
-              private function init():void {
-
-   			 fr = new FileReference();	
-   			  
-       		 this.width = stage.width;
-			this.height = stage.height;
-   			// fr.addEventListener(Event.CANCEL, doEvent);
+			public var ScrollList:ArrayCollection = new ArrayCollection();
+			public var anOtherCopyOfProductsList:XMLListCollection = new XMLListCollection();
+			public var totalResults:uint; 
+			public var totalPages:uint;        
+			public var currentPage:uint;	
+			public var pageLength:uint;
+			public var previousPageStop:uint;
+			public var previousPageStart:uint;
+			/*--------------------------------------------------------------------------*/      
+			
+			private var imageWidth:Number;
+			private var imageHeight:Number;        
+			
+            private function init():void {
+				fr = new FileReference();	   			  
+       		 	this.width = stage.width;
+				this.height = stage.height;
                 fr.addEventListener(Event.COMPLETE, doEvent);
-               
-               // fr.addEventListener(Event.OPEN, doEvent);
-                //fr.addEventListener(Event.SELECT, doEvent);
-
-   			 }
-   			  private function doEvent(evt:Event):void {
-  
-
+   			}
+   			private function doEvent(evt:Event):void {
               Alert.show("complete");
             }
-
-   			 
-		/*private function imageComplete() : void 
-            {
-            	imageWidth=mainImage.width; imageHeight=mainImage.height; 
-            	recenterImage();
-              // this.addEventListener( MouseEvent.MOUSE_UP, onApplicationMouseUp );
-               //this.addEventListener( MouseEvent.MOUSE_OUT, onApplicationMouseOut );
-            }
-		
-		  private function onCreationComplete() : void 
-            {
-                Application.application.addEventListener( MouseEvent.MOUSE_UP, onApplicationMouseUp );
-            }
-            private function onApplicationMouseUp( event : MouseEvent ) : void 
-            {
-                mainImage.stopDrag();
-            }
-            private function onApplicationMouseOut( event : MouseEvent ) : void 
-            {
-                mainImage.stopDrag();
-            }
-           
-*/
-			/*	
-			private function switchImage(e:Event){
-				var temp:String = currentImg;
-				currentImg = images[e.currentTarget.selectedIndex];
-				images[e.currentTarget.selectedIndex] = temp;
-				e.currentTarget.selectedChild.source = temp;
-											
-			}
-			*/
-			private var imageWidth:Number;
-			private var imageHeight:Number;
-			/*private function changeSize():void{
-				mainImage.width = uint(imageWidth*hSlider.value/100);
-				mainImage.height = uint(imageHeight*hSlider.value/100);
-				
-			}*/
-			private function nextImg():void{
+	
+			
+			
+			 private function nextImg():void{
 				currentImg = (currentImg + 1)%images.length;
 				imageViewer.centerView();
 				imageViewer.update();
-			}
-			private function prevImg():void{
+			 }
+			 private function prevImg():void{
 				currentImg = (currentImg-1 + images.length)%images.length;
 				imageViewer.centerView();
 				imageViewer.update();
-			}
+			 }
 			
 			 public function startDownload():void
-   			 {
-   			 var urlReq:URLRequest;
-   			
-   			 urlReq = new URLRequest(images[currentImg]);
-       		 fr.download(urlReq);
-   			 }
-   			 
+	   		 {
+	   		 var urlReq:URLRequest;
+	   		
+	   		 urlReq = new URLRequest(images[currentImg]);
+	   		 fr.download(urlReq);
+	   		 }
+	   		 
 			 private function removeMe():void {
-                PopUpManager.removePopUp(this);
-            }
-             private function horizontalList_change(evt:ListEvent):void {
+	            PopUpManager.removePopUp(this);
+	         }
+	         private function horizontalList_change(evt:ListEvent):void {
              	
              	var index:Object = HorList.selectedIndices;
-                productText.text=ScrollList[index].name;
-				productText.text = ScrollList[index].description;
+                productName.text = ScrollList[index].name;
+				productText.htmlText = ScrollList[index].description;
 				PZ_pPrice.text = parsePrice(ScrollList[index].minRetail, ScrollList[index].maxRetail);
 				Shopping_Url = ScrollList[index].url;
 			    
-			    var imgs:Array = new Array();
+			    var imgs:ArrayCollection = new ArrayCollection();
 		
-				imgs.push(ScrollList[index].primaryImage);
-				var variant:XMLList = XMLList(ScrollList[index].variantImage);
-				for(var i:uint =0 ; i< variant.length(); i++)
-					imgs.push(variant[i]);
+				imgs.addItemAt("C:/ProductSearch/images/"+ScrollList[index].primaryImage,0);
+				for(var i:uint =0 ; i< ScrollList[index].variantImage.length(); i++)
+					imgs.addItem("C:/ProductSearch/images/"+ScrollList[index].variantImage[i]);
+				//imgs.push(data.primaryImage);
 				images = imgs;
 				currentImg = 0;
 				imageViewer.update();
-            }
-            private function parsePrice(p1:String, p2:String):String{
+				
+             }
+             private function parsePrice(p1:String, p2:String):String{
 				var format:String = "";
 				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
 					format += "N/A";
@@ -150,59 +123,49 @@
 				return format;
 			}
 			
-			/*public function recenterImage() : void
-            {
-                mainImage.x = (this.width - mainImage.contentWidth)/2;
-                mainImage.y = (this.height - mainImage.contentHeight)/2;
-            }
-			 // Embed icon image.
-            [Embed(source='images/next.png')]
-             public var globeImage:Class;
-
-            // The mouseMove event handler for the Image control
-            // initiates the drag-and-drop operation.
-            private function mouseMoveHandler(event:MouseEvent):void 
-            {                
-                var dragInitiator:Image=Image(event.currentTarget);
-                var ds:DragSource = new DragSource();
-                ds.addData(dragInitiator, "img");           
-                
-                // The drag manager uses the Image control 
-                // as the drag proxy and sets the alpha to 1.0 (opaque),
-                // so it appears to be dragged across the Canvas.
-                var imageProxy:Image = new Image();
-                imageProxy.source = globeImage;
-                imageProxy.height=20;
-                imageProxy.width=20;                
-                DragManager.doDrag(dragInitiator, ds, event, 
-                    imageProxy, -20, -20, 1.00);
-            }    
-
-                //DragManager.doDrag(dragInitiator, ds, event);
-           // }
-            
-            // The dragEnter event handler for the Canvas container
-            // enables dropping.
-            private function dragEnterHandler(event:DragEvent):void {
-                if (event.dragSource.hasFormat("img"))
-                {
-                    DragManager.acceptDragDrop(Canvas(event.currentTarget));
-                }
-            }
-   
-            // The dragDrop event handler for the Canvas container
-            // sets the Image control's position by 
-            // "dropping" it in its new location.
-            private function dragDropHandler(event:DragEvent):void {
-                Image(event.dragInitiator).x = 
-                    Canvas(event.currentTarget).mouseX;
-                Image(event.dragInitiator).y = 
-                    Canvas(event.currentTarget).mouseY;
-            }*/
 			
-			 
-			 
-			 
+            /**
+			 * This function is to handle contentBox.mainDisplay.nextPage and prevPage buttons
+			 **/ 
+			private function pageHandler(e:MouseEvent){					
+				if(e.currentTarget.id=="nextPage" && currentPage!=totalPages)	
+				{	
+					/*Alert.show("_previousPageStop "+_previousPageStop  +"\n"
+							+ "_previousPageStart "+_previousPageStart +"\n"
+							+ "_previousPage " +_currentPage);*/
+					previousPageStart = previousPageStop;
+					currentPage += 1;
+					
+					ScrollList = new ArrayCollection();
+
+					
+					if(anOtherCopyOfProductsList.length -previousPageStop > pageLength){			
+						for(var i:uint = 0; i < pageLength; i++){
+							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(previousPageStop+i));
+						}
+						previousPageStop += pageLength;	
+					}else{			
+						for(var i:uint = previousPageStop; i < anOtherCopyOfProductsList.length; i++){
+							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
+						}
+						previousPageStop = anOtherCopyOfProductsList.length-1;	
+					}	
+					/*--------------------------------------------------------------------------*/						
+									
+				}else if(e.currentTarget.id=="prevPage" && currentPage!=1)
+				{
+					
+					ScrollList = new ArrayCollection();		
+					currentPage -= 1;		
+					
+					for(var i:uint = previousPageStart - pageLength; i < previousPageStart ; i++){
+						ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
+					}
+					previousPageStop = previousPageStart;
+					if(previousPageStart>0)previousPageStart = previousPageStart - pageLength;
+					/*--------------------------------------------------------------------------*/						
+				}		
+			}		 
 		]]>
 	</mx:Script>
 		<mx:Style>
@@ -287,165 +250,80 @@
 		   cornerRadius: 20;
 		   dropShadowEnabled: false;
 		   shadowDistance: -20;
-		}
-		
-		/*
-		TextInput {
-			borderStyle: solid;
-			borderThickness: .5;
-			cornerRadius: 7;
-			backgroundAlpha: 0.2;
-		}
-		*/		
-				
+		}							
 	</mx:Style>
-		
-	
-
-    <!--<mx:Glow id="glowImage" duration="1000" 
-        alphaFrom="1.0" alphaTo="0.3" 
-        blurXFrom="0.0" blurXTo="50.0" 
-        blurYFrom="0.0" blurYTo="50.0" 
-        color="0xCCCCCC"/>
-        
-    <mx:Glow id="unglowImage" duration="1000" 
-        alphaFrom="0.3" alphaTo="1.0" 
-        blurXFrom="50.0" blurXTo="0.0" 
-        blurYFrom="50.0" blurYTo="0.0" 
-        color="0xCCCCCC"/>-->
 <mx:Canvas id="can" width="100%" height="100%" >
-	<mx:VBox width="100%" height="100%" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
-	<mx:ControlBar  width="100%" height="13%" verticalAlign="top" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+	<mx:VBox width="100%" height="100%" horizontalAlign="center" paddingBottom="0" 
+		paddingLeft="0" paddingRight="0" paddingTop="0">
+		<!-- Products List on Top -->
+		<mx:ControlBar width="100%" height="13%" 
+			horizontalAlign="center" verticalAlign="middle" 
+			paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+			<mx:Image id="prevPage" toolTip="Click to see previous page of products"
+				source="@Embed(source='images/prevImg.png')" click="pageHandler(event);"/>	
+			<mx:HorizontalList id="HorList"  height="100%"  
+				verticalAlign="top" textAlign="center" horizontalCenter="true"
+				horizontalScrollPolicy="auto" 
+				dataProvider="{ScrollList}" rollOverColor="#A5A5AF" backgroundAlpha="0" 
+				itemRenderer="content.display.iconRenderer"  columnCount="10"
+				rowHeight="100" columnWidth="100" styleName="thumbnailList"
+				horizontalScrollBarStyleName="HScrollBar"
+				change="horizontalList_change(event)"/>
+			<mx:Image id="nextPage" toolTip="Click to see next page of products"				
+				source="@Embed(source='images/nextImg.png')" click="pageHandler(event);" />			
+		</mx:ControlBar>	
+		<!--End of Products List on Top -->
 	
-	<mx:HorizontalList  id="HorList" width="100%" height="100%"  verticalAlign="top" dataProvider="{ScrollList}" rollOverColor="#A5A5AF" backgroundAlpha="0" 
-		itemRenderer="content.display.iconRenderer" rowHeight="100" columnWidth="100" styleName="thumbnailList"  horizontalScrollBarStyleName="HScrollBar"
-		 change="horizontalList_change(event)"></mx:HorizontalList>
-		 </mx:ControlBar>	
-
-	
-	
-   
-    <mx:HBox horizontalGap="0" horizontalAlign="center" verticalAlign="top" width="100%" paddingLeft="20" height="70%" paddingBottom="0" paddingRight="0" paddingTop="0">  
-    <mx:Image id="prev" source="@Embed(source='images/prevImg.png')" click="prevImg();"/>
-    <mx:VBox height="80%" width="70%"  verticalAlign="top" paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="10">
-    	
-    
-    <mx:Canvas width="100%" height="100%" backgroundColor="#333333" >
-			
-		
-		<!--ImageViewer -->
-		<ns2:ImageViewer
-			 id="imageViewer"
-		 
-			imageURL="{images[currentImg]}"
-			bitmapScaleFactorMax="5"
-			bitmapScaleFactorMin=".05"
-			width="100%" height="100%"
-			 x="0" y="0"  />		
-		
-		<!--Navigation controlls -->
-		<mx:VBox 
-			left="10" 
-			top="10" 
-			width="20"
-			>
-			
-			<mx:Spacer/>
-			
-			<mx:Button 
-				styleName="ZoomOutButton"
-				toolTip="Zoom In"
-				click="{imageViewer.zoom('in');}"
-				/>
-				
-			<mx:HBox 
-				width="20"
-				>
-				
-				<mx:VSlider
-					minimum="{ imageViewer.bitmapScaleFactorMin }" 
-					maximum="{ imageViewer.bitmapScaleFactorMax }" 
-					value  ="{ imageViewer.bitmapScaleFactor }"	
-					change ="{ imageViewer.setZoom(VSlider(event.currentTarget).value) }" 				
-					snapInterval=".001"
-					liveDragging="true" 
-					/>	
-									
-			</mx:HBox>
-
-			<mx:Button 
-				styleName="ZoomInButton"
-				toolTip="Zoom Out"
-				click="{ imageViewer.zoom('out'); }"			
-				/>	
-			
-			<mx:Spacer/>
-										
-		</mx:VBox>	
-		
-		
-		
-	</mx:Canvas>
-    <mx:Button label="Click to Download Product" click="startDownload()"/>
-      </mx:VBox>
-    <!--<mx:HBox width="35%" height="80%" autoLayout="false"  horizontalScrollPolicy="auto" verticalScrollPolicy="auto" horizontalAlign="left">
-    <mx:Canvas width="35%" height="80%" backgroundColor="#333333"  dragEnter="dragEnterHandler(event)" 
-        dragDrop="dragDropHandler(event)" verticalScrollPolicy="on" horizontalScrollPolicy="on" creationComplete="onCreationComplete()">
-      
-		<mx:Image id="mainImage" source="{images[currentImg]}" width="100%" height="100%" 
-		rollOverEffect="{glowImage}"
-		rollOutEffect="{unglowImage}"
-		 mouseDown="mainImage.startDrag()"  mouseUp="mainImage.stopDrag()" 
-		creationComplete="imageComplete()" x="0" y="0">
-		
-		</mx:Image>
-		
-
-		
-	</mx:HBox>
-	</mx:Canvas>-->
-	
-	
-	
-	<mx:Image id="next" source="@Embed(source='images/nextImg.png')" click="nextImg();" />
-	<mx:VBox width="100%" height="100%" horizontalScrollPolicy="auto" verticalScrollPolicy="auto" horizontalAlign="center" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
-		<mx:Text id="productName"   width="100%" height="12%" fontSize="24" color="#F8FBFC" textAlign="center" paddingTop="5"/>
-		<mx:TextArea id="productText"  styleName="TextArea" verticalScrollPolicy="auto" width="80%" height="60%" editable="false" />
-	
-		<!--<mx:Text id="productTeext"  width="386" height="162" color="#FAFCFD" fontSize="16" />-->
-		<mx:HBox width="100%" textAlign="center" horizontalAlign="center" verticalAlign="middle">
-			<mx:Label text="Price: " fontSize="16" color="#6C7072"/>
-			<mx:Label id="PZ_pPrice" width="223" color="#FDFDFD" fontSize="16" letterSpacing="1"/>
-		</mx:HBox>
-		
-		<mx:LinkButton label="Go Shopping!!" click="{ navigateToURL(new URLRequest(Shopping_Url),'_blank') }" fontStyle="normal" textAlign="center" width="270" color="#FAF7F7" fontSize="16" fontThickness="2"/>
-	
-	
+   		<!-- Individual product's details at bottom -->
+	    <mx:HBox horizontalGap="0" horizontalAlign="center" verticalAlign="middle" 
+	    	width="100%" paddingLeft="20" height="70%" paddingBottom="0" paddingRight="0" paddingTop="0">  
+	    	<!--ImageViewer on the Left -->
+	    	<mx:Image id="prev" source="@Embed(source='images/prevImg.png')" click="prevImg();"/>
+		    <mx:VBox height="80%" width="70%"  verticalAlign="top" 
+		    	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="10">
+			    <mx:Canvas width="100%" height="100%" backgroundColor="#333333" >
+					
+					<ns2:ImageViewer id="imageViewer" imageURL="{images[currentImg]}" bitmapScaleFactorMax="5"
+						bitmapScaleFactorMin=".05" width="100%" height="100%" x="0" y="0"  />		
+					
+					<!--Navigation controlls -->
+					<mx:VBox left="10" top="10"	width="20">				
+						<mx:Spacer/>				
+						<mx:Button styleName="ZoomOutButton" toolTip="Zoom In"	click="{imageViewer.zoom('in');}"/>					
+						<mx:HBox width="20">				
+							<mx:VSlider
+								minimum="{ imageViewer.bitmapScaleFactorMin }" 
+								maximum="{ imageViewer.bitmapScaleFactorMax }" 
+								value  ="{ imageViewer.bitmapScaleFactor }"	
+								change ="{ imageViewer.setZoom(VSlider(event.currentTarget).value) }" 				
+								snapInterval=".001"	liveDragging="true"/>											
+						</mx:HBox>	
+						<mx:Button 
+							styleName="ZoomInButton"
+							toolTip="Zoom Out"
+							click="{ imageViewer.zoom('out'); }"/>					
+						<mx:Spacer/>										
+					</mx:VBox>	
+				</mx:Canvas>
+	    		<mx:Button label="Click to Download Product" click="startDownload()"/>
+	    	</mx:VBox>
+			<mx:Image id="next" source="@Embed(source='images/nextImg.png')" click="nextImg();" />
+			<!--End of ImageViewer on the Left -->
+			<!--Product details on the right -->
+			<mx:VBox width="100%" height="100%" horizontalScrollPolicy="auto" verticalScrollPolicy="auto" horizontalAlign="center" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
+				<mx:Text id="productName" width="100%" height="12%" fontSize="24" color="#F8FBFC" textAlign="center" paddingTop="5"/>
+				<mx:TextArea id="productText"  styleName="TextArea" textAlign="left"
+					verticalScrollPolicy="auto" width="80%" height="60%" editable="false" />						
+				<mx:HBox width="100%" textAlign="center" horizontalAlign="center" verticalAlign="middle">
+					<mx:Label text="Price: " fontSize="16" color="#6C7072"/>
+					<mx:Label id="PZ_pPrice" width="223" color="#FDFDFD" fontSize="16" letterSpacing="1"/>
+				</mx:HBox>				
+				<mx:LinkButton label="Go Shopping!!" click="{ navigateToURL(new URLRequest(Shopping_Url),'_blank') }" fontStyle="normal" 
+					textAlign="center" width="270" color="#FAF7F7" fontSize="16" fontThickness="2"/>
+			</mx:VBox>	
+			<!--End of Product details on the right -->
+		</mx:HBox>	
+		<!--End of Individual product's details at bottom -->
 	</mx:VBox>
-	
-	</mx:HBox>
-	
-		</mx:VBox>
-	<!--<mx:HSlider id="hSlider" minimum="50" maximum="250" value="100" 
-            dataTipPlacement="top" 
-            tickColor="#333333" 
-            snapInterval="1" tickInterval="20"     
-            allowTrackClick="true" 
-            liveDragging="true"
-            change="changeSize();"/>-->
-
-<!--
-	<mx:HBox horizontalAlign="center" creationComplete="images.push(currentImg);">
-	<mx:HorizontalList id="imageList" dataProvider="{images}" width="70%"  
-	 columnWidth="80" itemClick="switchImage(event)" backgroundAlpha="0.1" >
-		<mx:itemRenderer>
-			<mx:Component>
-				<mx:Image source="{data}" width="80" height="80" alpha="0.8" />
-			</mx:Component>
-		</mx:itemRenderer>
-	
-	</mx:HorizontalList>
-	</mx:HBox>
---> 	
 </mx:Canvas>
 </mx:TitleWindow>

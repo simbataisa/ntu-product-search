@@ -4,7 +4,7 @@ package controller.events
 
 	public class MessageEvent extends Event
 	{
-		public static const MESSAGE = "message";
+		public static const MESSAGE:String = "message";
 		public var mess:String;
 		public function MessageEvent(type:String, messa:String)
 		{

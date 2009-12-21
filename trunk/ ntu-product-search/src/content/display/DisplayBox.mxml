@@ -3,37 +3,17 @@
 	horizontalGap="0" verticalGap="0" backgroundColor="#FFFFFF"
 	xmlns:display="content.display.*"
  verticalScrollPolicy="auto" horizontalScrollPolicy="auto">
-<!--
+
 	<mx:Script>
 		<![CDATA[
 	
-			import flash.filters.DropShadowFilter;
-			import mx.controls.Alert;
-			
-		 function modifyFilter():void{
-		  	var shadow:int = filterPosition(viewControl,DropShadowFilter);
-		  	if(shadow > -1){
-		  		var myFilters:Array = viewControl.filters;
-		  		Alert.show("is " + shadow.toString());	
-		  	}
-		  	else
-		  		Alert.show("hell");
-		 } 
-			
-	function filterPosition(ob:Object, filterClass:Class):int {
-         for (var i:uint = 0; i < ob.filters.length; i++) {
-             if (ob.filters[i] is filterClass) {
-                 return i;
-             }
-         }
-         return -1;
-     }
-
-
+			public var simpleDP:Array = ['0x000000', '0xFF0000', '0xFF8800',
+               '0xFFFF00', '0x88FF00', '0x00FF00', '0x00FF88', '0x00FFFF',
+               '0x0088FF', '0x0000FF', '0x8800FF', '0xFF00FF', '0xFFFFFF'];
 			
 		]]>
 	</mx:Script>
--->
+
 	<mx:Style>
 		ControlBar{
 			padding-bottom:0;
@@ -68,27 +48,37 @@
 		</root>
 		
 	</mx:XML>
-	<!--
-				<separator type="separator" />
-			<editItem label="Column View"/>
-	-->
+
 	<mx:ControlBar id="viewControl" width="100%" backgroundAlpha="0.7">
 		<mx:PopUpMenuButton label="Sort by" dataProvider="{sort}" id="sortBut" 
-		labelField="@label" showRoot="false"  height="25"/>
-<!--	<mx:Spacer width="8%" /> -->
-		<mx:PopUpMenuButton label="zoom"  dataProvider="{zoom}" labelField="@label" showRoot="false"
-		icon="@Embed(source='/images/zoom2.png')" height="25" />
-	
+		labelField="@label" showRoot="false"  height="25"/>			
 		<mx:PopUpMenuButton label="" labelField="@label" icon="@Embed(source='/images/viewIcon2.gif')" 
-			dataProvider="{view}" showRoot="false" height="25" itemClick="searchResults.itemClickHandler(event);"/>
+			dataProvider="{view}" id="viewOption" showRoot="false" height="25"/>
 		<mx:Spacer width="1%" />
 		<mx:Button icon="@Embed(source='/images/prev.png')" width="15" id="prevPage"/>
 		<mx:TextInput width="30" text="1" maxChars="2" textAlign="right" id="page"/>	
 		<mx:Button icon="@Embed(source='/images/next.png')" width="15" id="nextPage"/>
 		<mx:Label id = "Nopage" color="#000000"/>
-		<mx:Spacer width="40%" />
+		<mx:Spacer width="5%" />
+		<mx:Image source="images/zoom2.png"/>		
+		<mx:HSlider id="SliderZoom" labels="[Min,Max]" tickInterval="5" toolTip="Zoom" value="30" minimum="30" maximum="80"/>
+		<mx:Spacer width="5%" />
+		<mx:Label text="Color Sort:" />
+		<mx:ColorPicker id="ColorPick"  dataProvider="{simpleDP}" visible="true"  width="45" height="20" toolTip="Select a color to sort"/>
+		<mx:Spacer width="30%"/>		
 		<mx:Label text="Hits per page" />
-		<mx:NumericStepper id="pageHits" minimum="1" maximum="50" value="30"/> 
+		<mx:ComboBox id="pageHits">
+			<mx:dataProvider>
+				<mx:ArrayCollection>
+					<mx:Array>
+						<mx:Object value="20" label="20"/>
+						<mx:Object value="40" label="40"/>
+						<mx:Object value="60" label="60"/>								
+					</mx:Array>					
+				</mx:ArrayCollection>
+			</mx:dataProvider>
+		</mx:ComboBox>
+		<!--mx:NumericStepper id="pageHits" minimum="1" maximum="50" value="30"/--> 
 	</mx:ControlBar>
 	<mx:HRule x="0" y="0" width="100%"/>
 	

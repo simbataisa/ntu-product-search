@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Accordion xmlns:mx="http://www.adobe.com/2006/mxml" themeColor="#FE7008" paddingRight="0" width="731" height="516">
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" themeColor="#FE7008" paddingRight="0" width="731" height="516">
 	<mx:Style>
 		.details{
 			horizontal-align:left;
@@ -31,14 +31,14 @@
 			public var currentImgId: uint;
 			
 			[Bindable]
-			public var images:Array;
+			public var images:ArrayCollection;
 			
 			[Bindable]
 			public var allGames:ArrayCollection = new ArrayCollection();
 			
 			
 
-			private function changeImage(e:FlexEvent){
+			private function changeImage(e:FlexEvent):void{
 	
 				if(images.length > 0 ){
 					if(e.currentTarget.id=="nextImg"){
@@ -66,20 +66,19 @@
 			}
 		]]>
 	</mx:Script>
-	<mx:VBox label="Product Details" styleName="details" verticalScrollPolicy="auto" horizontalScrollPolicy="off" width="100%" horizontalAlign="left" 
+	<mx:VBox label="Product Details" styleName="details" verticalScrollPolicy="auto" 
+		horizontalScrollPolicy="off" 
+		width="100%" horizontalAlign="left" 
 		verticalScrollBarStyleName="myVScrollBar" height="98%">
-		<mx:VBox  horizontalAlign="center" width="100%" verticalAlign="middle" paddingLeft="0" paddingRight="0"  > 
-		
-		<mx:Image id="pImage" source="{images[currentImgId]}" width="220" height="250" completeEffect="Fade" horizontalAlign="center"/>
-		<mx:HBox width="240" horizontalAlign="center" >
-		<mx:Button id="nextImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/prev.png')" alpha="0.5"/>
-		<mx:Button id="prevImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/next.png')" alpha="0.5"/>
-		</mx:HBox>	
-	<!---	<mx:Button id="prevImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/next.png')" width="25" alpha="0.5" /> -->
+		<mx:VBox  horizontalAlign="center" width="100%" verticalAlign="middle" paddingLeft="0" paddingRight="0"  > 		
+			<mx:Image id="pImage" source="{images[currentImgId]}" width="220" height="250" 
+				completeEffect="Fade" horizontalAlign="center"/>
+			<mx:HBox width="240" horizontalAlign="center" >
+				<mx:Button id="nextImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/prev.png')" alpha="0.5"/>
+				<mx:Button id="prevImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/next.png')" alpha="0.5"/>
+			</mx:HBox>	
 		</mx:VBox>
-		
-
-		
+				
 		<mx:Grid id="aProduct" horizontalGap="0" verticalGap="0" width="100%" height="100%">
 		<mx:GridRow >
 			<mx:GridItem>
@@ -93,7 +92,7 @@
 		</mx:GridRow>
 		<mx:GridRow >
 			<mx:GridItem colSpan="2" textAlign="left" >
-				<mx:Text id="pDescrip" text="{details.description}" width="235"/>
+				<mx:Text id="pDescrip" htmlText="{details.description}" width="235"/>
 			</mx:GridItem>
 		</mx:GridRow>
 		<mx:GridRow >
@@ -136,7 +135,7 @@
 			<mx:LinkButton id="Subscribe" label="Favorite" />
 		</mx:ControlBar> 
 	</mx:VBox>
-	<!-- REFINE SEARCH RESULTS===================================================     -->
+	<!--____________________________________________ REFINE SEARCH RESULTS ________________________________________
 	<mx:VBox id="refineForm" label="Refine Search" paddingLeft="0" horizontalGap="0" verticalScrollPolicy="off">
 		<mx:Form  height="100%" verticalGap="15">
 			<mx:FormItem label="Product">
@@ -168,7 +167,7 @@
 				<mx:TextInput id="store" />
 			</mx:FormItem>
 			<mx:FormItem label="Color">
-				<mx:ColorPicker id="pColor" />  <!-- use dataProvider for narrower range of colors -->
+				<mx:ColorPicker id="pColor" />  // use dataProvider for narrower range of colors 
 			</mx:FormItem>
 			<mx:FormItem label="Comment">
 				<mx:CheckBox id="pComment" />
@@ -177,15 +176,5 @@
 				<mx:Button id="rSearch" label="Search" />
 			</mx:FormItem>
 		</mx:Form>
-	</mx:VBox>
-	<mx:VBox label="Your Cart" horizontalAlign="center" >
-		<mx:DataGrid dataProvider="{allGames}">
-			<mx:columns>
-				<mx:DataGridColumn headerText="Product Name" dataField="Col_product"/>
-				<mx:DataGridColumn headerText="Price" dataField="Col_price"/>
-				<mx:DataGridColumn visible="false" headerText="Column 3" dataField="Col_add"/>
-			</mx:columns>
-		</mx:DataGrid>
-		
-	</mx:VBox>
-</mx:Accordion>
+	</mx:VBox>	-->
+</mx:VBox>

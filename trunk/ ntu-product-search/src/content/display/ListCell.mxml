@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingBottom="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" horizontalGap="10"
-dataChange="parseRating(data.rating);">
+>
+
 <mx:Script>
 <![CDATA[
+//dataChange="parseRating(data.rating);"
 	import mx.events.FlexEvent;
 	import mx.managers.DragManager;
 	import mx.core.DragSource;
@@ -20,7 +22,8 @@ dataChange="parseRating(data.rating);">
 	[Embed(source="/images/halfGrey.png")]
 	public var halfStar:Class;
 	
-
+	[Bindable]
+	public var itemImageSize:uint = 80;
 	private var functions:Array = new Array("go shopping");
 	
 	private function truncate(str:String):String{
@@ -105,14 +108,10 @@ dataChange="parseRating(data.rating);">
 </mx:Script>
    <mx:Resize id="r" heightTo="150" heightFrom="120" widthFrom="80" widthTo="120" effectStart="resizeInst = ResizeInstance(event.effectInstance);" effectEnd ="resizeInst=null"/>
 
-	<mx:Image source="{data.primaryImage}" width="80" height="120" mouseMove="startDragHandler(event)" mouseOver="handleMouse(event)" mouseOut="handleMouse(event)">
-	<!--	<mx:rollOverEffect>
-			<mx:Zoom zoomHeightTo="2.0" zoomWidthTo="2.0" duration="1000" />
-		</mx:rollOverEffect>
-		<mx:rollOutEffect>
-			<mx:Zoom zoomHeightTo="1.0" zoomWidthTo="1.0" duration="1000" />
-		</mx:rollOutEffect>-->
-	</mx:Image>	
+	<mx:Image source="C:/ProductSearch/images/{data.primaryImage}" 
+		width="{itemImageSize}" height="{itemImageSize}" 
+		mouseMove="startDragHandler(event)" mouseOver="handleMouse(event)" 
+		mouseOut="handleMouse(event)"/>
 	<mx:VBox verticalGap="0">
 		
 		<mx:Label text="{data.name}" fontWeight="bold" />
