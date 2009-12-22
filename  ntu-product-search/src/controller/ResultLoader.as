@@ -80,7 +80,8 @@ package controller
 		}	
 		
 		private function io_errorHandler(event:Event):void{
-			Alert.show("Unable to connect to server");
+			var resultEvt:IOLoadEvent = new IOLoadEvent(IOLoadEvent.ERROR, true);
+			dispatchEvent(resultEvt);
 		}	
 	}
 }
