@@ -69,11 +69,11 @@
 				try{											
 					Log.getLogger("ProductSearch").info("Testing");
 					_welcomPageLoader = new URLLoader();
-					var request:URLRequest = new URLRequest("Model/results.xml");
+					var request:URLRequest = new URLRequest("./Model/results.xml");
 					_welcomPageLoader.addEventListener(Event.COMPLETE, welcomPageResultDisplayHandler);
 					_welcomPageLoader.load(request);
 				}catch(e:Error){
-					Alert.show("Error");
+					Alert.show("Unable to load results.xml");
 				}
 				
 				
