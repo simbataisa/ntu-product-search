@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" themeColor="haloSilver" 
+	xmlns:controls="com.asfusion.controls.*"	  
+	xmlns:rating="com.Rating*"
+	horizontalScrollPolicy="off" verticalScrollPolicy="off"  verticalAlign="center" horizontalAlign="center" xmlns:Rating="com.Rating.*">
+	<mx:Style>
+		.rating {
+			overSkin: Embed(source='images/goldStar.png');
+			upSkin: Embed(source='images/goldStar.png');
+			unselectedSkin: Embed(source='images/greyStar.png');
+			selectedSkin: Embed(source='images/redStar.png');
+			horizontalGap: 0;
+		}
+	</mx:Style>
+	<mx:Metadata>
+		[Event(name="rating", type="controller.events.RaingEvent")]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			
+			import controller.events.FavouriteEvent;
+			import mx.containers.Box;
+			import content.ContentBox;
+			import mx.collections.XMLListCollection;
+			import mx.events.ItemClickEvent;
+			import mx.events.MenuEvent;
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			import mx.containers.TitleWindow;
+			import content.display.ProductZoom;
+			import mx.events.FlexMouseEvent;
+			import mx.core.Application;
+			import mx.events.FlexEvent;
+			import mx.events.CloseEvent;
+			import mx.events.ListEvent;
+			import mx.effects.Zoom;
+			import mx.controls.Alert;
+			import mx.managers.DragManager;
+			import mx.core.*;
+
+		
+			private var userFavourite:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			private var results:ArrayCollection = new ArrayCollection();
+			private var resultForPopup:ArrayCollection = new ArrayCollection();
+			private var _productsList:XMLListCollection = new XMLListCollection();
+			public var index:Object ;
+			/*---------------------------------------------------------------*/
+			public var totalResults:uint; 
+			public var totalPages:uint;        
+			public var currentPage:uint;	
+			public var pageLength:uint;
+			public var previousPageStop:uint;
+			public var previousPageStart:uint;
+			/*---------------------------------------------------------------*/
+			
+			[Bindable]
+			public var itemImageSizeGridResult:int = 80;
+			[Bindable]
+			public var itemImageSizeListResult:int = 100;
+			
+			public var PanelCart:ArrayCollection = new ArrayCollection();
+			
+			public function getResults():ArrayCollection{
+				return this.results;
+			}
+			public function setResults(arr:ArrayCollection):void{
+				this.results = arr;
+			}
+			
+			public function getResultPopupPage():ArrayCollection{
+				return this.resultForPopup;
+			}
+			public function setResultPopupPage(arr:ArrayCollection):void{
+				this.resultForPopup = arr;
+			}
+			
+			public function getProductsList():XMLListCollection{
+				return this._productsList;
+			}
+			public function setProductsList(arr:XMLListCollection):void{
+				this._productsList = arr;
+			}
+			public function itemClickHandler(evt:MenuEvent):void{
+				if(evt.type == MenuEvent.ITEM_CLICK){				
+				 	if(evt.label=="Grid View"){						
+				 		shopWindow.selectedIndex = 0;	
+				 	}
+				 	else if(evt.label=="List View"){
+			
+				 		shopWindow.selectedIndex = 1;
+				 	}		
+				}	
+			}
+			public function setIndex(evt:ListEvent):void{
+				 index = evt.itemRenderer.data;				
+				
+			}
+			public function unsetIndex(evt:ListEvent):void{
+				 index = null;				
+			}
+			
+			public function ListHandler(e:ListEvent):void{				
+				showProductZoom(e.itemRenderer.data);				
+			}
+			
+			public function showProductZoom(Curdata:Object):void {
+				var productWindow:ProductZoom;
+			    productWindow = ProductZoom(PopUpManager.createPopUp(this, ProductZoom, true));
+			    productWindow.addEventListener(CloseEvent.CLOSE, close);
+				productWindow.showCloseButton = true;
+				productWindow.productName.text=Curdata.name;
+				productWindow.productText.text = Curdata.description;
+				productWindow.PZ_pPrice.text = parsePrice(Curdata.minRetail, Curdata.maxRetail);
+				productWindow.Shopping_Url = Curdata.url;
+			    productWindow.ScrollList = resultForPopup;
+			    productWindow.anOtherCopyOfProductsList = _productsList;
+			    /*-----------------------------------------------------------------------------*/
+			    var imgs:ArrayCollection = new ArrayCollection();
+				imgs.addItemAt("p_images/"+Curdata.primaryImage,0);
+				for(var i:uint =0 ; i< Curdata.variantImage.length(); i++)
+					imgs.addItem("p_images/"+Curdata.variantImage[i]);
+				//imgs.push(data.primaryImage);
+				productWindow.images = imgs;
+				/*-----------------------------------------------------------------------------*/
+				productWindow.totalResults = totalResults; 
+				productWindow.totalPages = totalPages;        
+				productWindow.currentPage = currentPage;	
+				productWindow.pageLength = pageLength;
+				productWindow.previousPageStop =  previousPageStop;
+				productWindow.previousPageStart = previousPageStart;
+						    
+			}
+			
+			public function addToFavourite(curData:Object):void {
+				var obj:Object = new Object();
+				obj["pName"] = curData.name;
+				obj["pPrice"] = parsePrice(curData.minRetail,curData.maxRetai);
+				obj["pAdd"] = curData.url;	
+				obj["pAsin"] = curData.asin;						
+				var favEvent:FavouriteEvent = new FavouriteEvent(FavouriteEvent.FAVOURITE, obj);				
+				statusBar.dispatchEvent(favEvent);						    
+			}
+			
+			public function goShopping(Curdata:Object):void{
+				navigateToURL(new URLRequest(Curdata.url),'_blank');
+			}
+			
+			private function parsePrice(p1:String, p2:String):String{
+				var format:String = "";
+				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+					format += "N/A";
+				else
+					format += "$"+p1;
+					
+				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+					format += "-N/A";
+				else
+					format += "-$"+p2;					
+				return format;
+			}
+			private function close(e:CloseEvent):void{
+				PopUpManager.removePopUp(ProductZoom(e.currentTarget));
+			}
+		]]>
+	</mx:Script>
+	<mx:Label width="100%" styleName="status" id="statusBar"/>
+	
+	<mx:ViewStack id="shopWindow" width="100%" height="100%">
+		<!--______________________________________________ Grid View __________________________________________________-->
+		<mx:Canvas showEffect="WipeDown" hideEffect="WipeUp"  width="100%" height="100%" 
+			horizontalScrollPolicy="off" verticalScrollPolicy="off" >
+			<mx:ControlBar showEffect="WipeDown" hideEffect="WipeUp" horizontalAlign="center"  width="100%" height="100%">
+				<mx:TileList id="gridResult" width="100%" height="100%"  dataProvider="{results}" 
+				verticalScrollPolicy="on" toolTip="drag to left panel for visual search"  
+				styleName="mainView" rowHeight="150" columnWidth="150"
+				itemRollOver="setIndex(event)" itemRollOut="unsetIndex(event)"
+				allowMultipleSelection="true">
+					<mx:itemRenderer>
+						<mx:Component>							
+							<mx:VBox horizontalScrollPolicy="off" horizontalAlign="center" verticalScrollPolicy="off" 
+			                	width="100%" height="100%" mouseOver="set_Visible(event)" mouseOut="unset_Visible(event)">
+			                    <mx:Script>
+			                		<![CDATA[
+			                			import controller.ResultLoader;
+			                			import mx.controls.Alert;
+			                			import mx.effects.*;
+										import mx.effects.effectClasses.*;
+										import mx.events.*;
+										import mx.core.*;
+										import mx.events.FlexEvent;
+										public var resizeInst:ResizeInstance;
+										import mx.managers.DragManager;
+										import mx.managers.PopUpManager;
+										import mx.events.CloseEvent;
+										import controller.events.RatingEvent;
+										
+										[Embed(source="/images/star.png")]
+										
+										public var star:Class;
+										[Embed(source="/images/greyStar.png")]
+										
+										public var greyStar:Class;
+										[Embed(source="/images/halfGrey.png")]
+										
+										public var halfStar:Class;
+										
+										[Embed(source="/images/camera.png")]
+										public var defaultImage:Class;
+										
+										public var results:XMLList;
+										
+										private function startDragHandler(e:MouseEvent):void{
+											var dragInitiator:Image = Image(e.currentTarget);
+											var dragSource:DragSource = new DragSource();
+											dragSource.addData(data, "product data");
+											var imageProxy:Image = new Image;
+											imageProxy.source = dragInitiator.source;
+											imageProxy.width = dragInitiator.width;
+											imageProxy.height = dragInitiator.height;
+											DragManager.doDrag(dragInitiator, dragSource, e, imageProxy);
+										}
+										
+										
+										private function toShoppingSite():void{
+											var request:URLRequest = new URLRequest(data.url);
+											navigateToURL(request,"_blank");
+										}
+												
+										private function parseRating(rateData:String):void{
+											var rate:Number; 
+											if(rateData == "" ||rateData == null)
+												rate = 0;
+											else
+											rate = Number(rateData);
+											//rateBox.removeAllChildren();	
+											//---------------------------------
+											for(var i:uint = 1; i<=5; i++){
+												var img:Image = new Image();
+												img.width = 10;
+												img.height = 10;
+												img.alpha = 0.7;
+												if(Number(i) <= rate){
+													img.source = star;
+												}
+												else if((Number(i)-0.25)>rate && (Number(i-1)+0.25) < rate){
+													img.source = halfStar;					
+												}
+										
+												else if(Number(i) > rate){
+													img.source = greyStar;
+												}
+												
+												//rateBox.addChild(img);
+											}
+										}
+										private function parseRating1(rateData:String):void{
+											var rate:Number; 
+											rateBox1.value = 0;
+											rateBox1.validateNow();
+											if(rateData == "" ||rateData == null)
+												rate = 0;
+											else
+												rate = Number(rateData);
+											rateBox1.invalidateProperties();
+											rateBox1.value = rate;
+											rateBox1.validateNow();
+										}
+										
+										private function set_Visible(event:MouseEvent):void{
+											control.visible=true;
+										}
+										private function unset_Visible(event:MouseEvent):void{
+											control.visible=false;
+										}
+											
+										public function doZoom(event:MouseEvent):void { 
+										    if (zoomAll.isPlaying) { 
+										       zoomAll.reverse(); 
+										    } 
+										    else { 
+										        zoomAll.play([event.currentTarget], event.type == MouseEvent.MOUSE_OUT ? true : false); 
+										    } 
+										} 
+										private function doRating(product_id:String, event:MouseEvent){																													
+											var params:URLVariables = new URLVariables("option=doRating&product_id="+product_id
+												+"&rating="+event.currentTarget.selectedValue);
+											var loader:ResultLoader = new ResultLoader();
+											loader.load("PSInterface/ratingController.php",params);
+											//mx.controls.Alert.show(product_id + " " +event.currentTarget.selectedValue);
+										}
+			                		]]>
+			                	</mx:Script>
+			                	
+								<mx:Zoom duration="300"  originX="0" originY="0" relevantProperties="true" id="zoomAll" 
+										zoomWidthTo="2" zoomHeightTo="2" zoomWidthFrom="1" zoomHeightFrom="1"  /> 
+								
+								<mx:HBox id="control" visible="false" >
+									<mx:Image  source="images/gui/shopping.png" toolTip="go shopping"
+										click="outerDocument.goShopping(data);"/>
+									<mx:Image  source="images/gui/star.png" toolTip="favorite" id="favIcon"
+										click="outerDocument.addToFavourite(data);" />
+									<mx:Image source="images/gui/zoom2.png" toolTip="zoom"
+										click="outerDocument.showProductZoom(data);"/>	
+							
+								</mx:HBox>
+								<mx:Image source="p_images/{data.primaryImage}" id="itemImage" 
+									width="{outerDocument.itemImageSizeGridResult}" 
+									height="{outerDocument.itemImageSizeGridResult}" 
+									mouseMove="startDragHandler(event)" 
+									mouseOver="doZoom(event)" mouseOut="doZoom(event)"/>
+								<mx:Label text="{data.name}" width="120" textAlign="left"/>
+								<!--<mx:HBox id="rateBox"  creationComplete="parseRating(data.avg_rating)"  />-->
+								<controls:Rating id="rateBox1" value="{data.avg_rating}"
+									styleName="rating" click="doRating(data.product_id, event);" 
+									showSelectedValue="true"/>								
+							</mx:VBox>
+						</mx:Component>				
+					</mx:itemRenderer>
+				</mx:TileList>
+			</mx:ControlBar>
+		</mx:Canvas>
+		<!-- 
+		<mx:Canvas horizontalScrollPolicy="off" verticalScrollPolicy="off" showEffect="WipeDown" hideEffect="WipeUp">
+			<mx:List id="listResult" dataProvider="{results}" width="100%" wordWrap="true" height="100%"  
+				horizontalScrollPolicy="off" styleName="mainView" 
+				 itemRenderer="content.display.ListCell">
+			</mx:List>	
+		</mx:Canvas>-->
+		<!--__________________________________________ List View _________________________________________________-->
+		<mx:Canvas horizontalScrollPolicy="off" verticalScrollPolicy="off" showEffect="WipeDown" hideEffect="WipeUp">
+			<mx:List id="listResult" dataProvider="{results}" width="100%" wordWrap="true" height="100%"  
+				horizontalScrollPolicy="off" styleName="mainView">
+					<mx:itemRenderer>
+						<mx:Component>
+							<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingBottom="0" 
+								horizontalScrollPolicy="off" verticalScrollPolicy="off" horizontalGap="10"
+								mouseOver="set_Visible(event)" mouseOut="unset_Visible(event)">
+								<mx:Script>
+								<![CDATA[
+								//dataChange="parseRating(data.rating);"
+									import mx.events.FlexEvent;
+									import mx.managers.DragManager;
+									import mx.core.DragSource;
+									import mx.events.ItemClickEvent;
+									import mx.effects.*;
+									import mx.effects.effectClasses.*;
+									import mx.events.*;
+									import mx.core.*;
+									import controller.ResultLoader;
+									public var resizeInst:ResizeInstance;
+									
+									[Embed(source="/images/star.png")]
+									public var star:Class;
+									[Embed(source="/images/greyStar.png")]
+									public var greyStar:Class;
+									[Embed(source="/images/halfGrey.png")]
+									public var halfStar:Class;
+									
+									[Bindable]
+									public var itemImageSize:uint = 80;
+									private var functions:Array = new Array("go shopping");
+									
+									private function truncate(str:String):String{
+										if(str.length > 300)
+											return str.substr(0,300)+"...";
+										else
+											return str;
+										}
+								
+									private function parsePrice(p1:String, p2:String):String{
+										var format:String = "";
+										if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+											format += "N/A";
+										else
+											format += "$"+p1;
+											
+										if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+											format += "-N/A";
+										else
+											format += "-$"+p2;					
+										return format;
+									}
+								
+									
+								
+									private function startDragHandler(e:MouseEvent):void{
+										var dragInitiator:Image = Image(e.currentTarget);
+										var dragSource:DragSource = new DragSource();
+										dragSource.addData(data, "product data");
+										var imageProxy:Image = new Image;
+										imageProxy.source = dragInitiator.source;
+										imageProxy.width = dragInitiator.width;
+										imageProxy.height = dragInitiator.height;
+										DragManager.doDrag(dragInitiator, dragSource, e, imageProxy);
+									}
+							
+									private function itemClickHandler(e:ItemClickEvent):void{
+										if(e.label == "go shopping"){
+											var request:URLRequest = new URLRequest(data.url);
+											navigateToURL(request,"_blank");
+										}
+									}															
+								
+									private function set_Visible(event:MouseEvent):void{
+										control_button_2.visible=true;
+									}
+									private function unset_Visible(event:MouseEvent):void{
+										control_button_2.visible=false;
+									}
+									public function handleMouse(event:MouseEvent):void
+									{
+										if (resizeInst)
+										 	resizeInst.reverse();
+										else
+											r.play([event.currentTarget],event.type==MouseEvent.MOUSE_OUT);
+									}
+									private function doRating(product_id:String, event:MouseEvent){																													
+										var params:URLVariables = new URLVariables("option=doRating&product_id="+product_id
+											+"&rating="+event.currentTarget.selectedValue);
+										var loader:ResultLoader = new ResultLoader();
+										loader.load("PSInterface/ratingController.php",params);
+										//mx.controls.Alert.show(product_id + " " +event.currentTarget.selectedValue);
+									}
+								]]>
+								</mx:Script>
+								   <mx:Resize id="r" heightTo="200" heightFrom="{outerDocument.itemImageSizeListResult}" 
+								   	widthTo="200" widthFrom="{outerDocument.itemImageSizeListResult}"  
+								   	effectStart="resizeInst = ResizeInstance(event.effectInstance);" 
+								   	effectEnd ="resizeInst=null"/>
+									<mx:HBox id="control_button_2" visible="false" >
+										<mx:Image  source="images/gui/shopping.png" toolTip="go shopping"
+											click="outerDocument.goShopping(data);"/>
+										<mx:Image  source="images/gui/star.png" toolTip="favorite" click="outerDocument.addToFavourite(data);" />
+										<mx:Image source="images/gui/zoom2.png" toolTip="zoom"
+											click="outerDocument.showProductZoom(data);"/>								
+									</mx:HBox>
+									<mx:HBox>
+										<mx:Image source="p_images/{data.primaryImage}" 
+										width="{outerDocument.itemImageSizeListResult}" 
+										height="{outerDocument.itemImageSizeListResult}" 
+										mouseMove="startDragHandler(event)" mouseOver="handleMouse(event)" 
+										mouseOut="handleMouse(event)"/>
+										<mx:VBox verticalGap="0">										
+											<mx:Label text="{data.name}" fontWeight="bold" />
+											<mx:Label text="{parsePrice(data.minRetail, data.maxRetail)}" color="#990000" fontWeight="bold"/>
+											<controls:Rating id="rateBox" value="{data.avg_rating}" showSelectedValue="true"
+												styleName="rating" click="doRating(data.product_id, event);" />	
+											<mx:Label text="Merchant: {data.merchant}" />
+											<mx:Text  htmlText="{truncate(data.description)}" width="600" truncateToFit="true"/>
+											<mx:ButtonBar dataProvider="{functions}" itemClick="itemClickHandler(event)"/>
+										</mx:VBox>	
+									</mx:HBox>
+																
+							</mx:VBox>
+						</mx:Component>
+					</mx:itemRenderer>
+			</mx:List>	
+		</mx:Canvas>
+	</mx:ViewStack>
+</mx:VBox>

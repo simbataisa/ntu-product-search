@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<!-- itemRenderers\htlist\myComponents\Thumbnail.mxml -->
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+ 
+    verticalGap="0" borderStyle="none" horizontalAlign="center"
+    backgroundColor="white" backgroundAlpha="0" 
+    horizontalScrollPolicy="off" verticalScrollPolicy="off">
+    <mx:Script>
+	 <![CDATA[
+    
+	    import mx.effects.*;
+		import mx.effects.effectClasses.*;
+		import mx.events.*;
+		import mx.core.*;
+		import mx.events.FlexEvent;
+		public var resizeInst:ResizeInstance;
+	
+		public function handleMouse(event:MouseEvent):void
+		{
+			if (resizeInst)
+				resizeInst.reverse();
+			else
+				r.play([event.currentTarget],event.type==MouseEvent.MOUSE_OUT);
+		}
+	
+		public function doZoom(event:MouseEvent):void { 
+	        if (zoomAll.isPlaying) { 
+	           zoomAll.reverse(); 
+	        } 
+	        else { 	 
+	            zoomAll.play([event.currentTarget], event.type == MouseEvent.MOUSE_OUT ? true : false); 
+	        } 
+	    } 
+    ]]>
+    	</mx:Script>
+    	<mx:Zoom duration="300" relevantProperties="true" id="zoomAll" zoomWidthTo="2" zoomHeightTo="2" zoomWidthFrom="1" 
+		zoomHeightFrom="1"  /> 
+    <mx:Resize id="r" heightTo="180" heightFrom="55" widthFrom="55" widthTo="180"    
+    	effectStart="resizeInst = ResizeInstance(event.effectInstance);" effectEnd ="resizeInst=null"/>
+    <mx:Image id="image"  x="0" y="0" width="60" height="60" source="p_images/{data.primaryImage}" 
+    	mouseOver="doZoom(event)" mouseOut="doZoom(event)"/>
+    <mx:Label text="{data.name}" width="120" textAlign="left"/>
+</mx:VBox>

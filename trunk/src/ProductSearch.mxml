@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application 
+	xmlns:mx="http://www.adobe.com/2006/mxml"	
+	xmlns:main="*"
+	xmlns:header="header.*"
+	xmlns:content="content.*"
+	
+	layout="absolute"
+	width="100%" height="100%" verticalGap="0" horizontalGap="0" 
+	paddingTop="0" horizontalScrollPolicy="off" paddingLeft="0" paddingRight="0" paddingBottom="0"
+	backgroundGradientColors="[0xFFFFFF,0xAAAAAA]" 
+	themeColor="haloSilver"
+	creationComplete="iniApp();">
+	<mx:Script source="controller/HeaderController.as" />
+	<mx:Script source="controller/BodyController.as" />
+	<mx:Script>
+		<![CDATA[
+			import mx.events.IndexChangedEvent;
+			import controller.events.USSearchResultEvent;
+			import controller.events.ColorSearchResultEvent;
+			import mx.events.ColorPickerEvent;
+			import controller.events.PDoubleClickEvent;
+			import mx.events.SliderEvent;
+			import controller.events.AutoSuggestionEvent;
+			import controller.events.TextSearchEvent;
+			import controller.events.FavouriteEvent;
+			import controller.events.IOLoadEvent;
+			import controller.events.MessageEvent;
+			import controller.events.CategoryEvent;
+			import controller.events.SearchResultEvent;
+			import mx.events.MenuEvent;
+			import mx.events.ListEvent;
+			import mx.events.FlexEvent;
+			import controller.ResultLoader;
+			import mx.controls.Alert;
+			import mx.controls.TextArea;
+			import mx.events.ItemClickEvent;
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+			import content.display.*;			
+			import mx.events.ItemClickEvent;
+			import mx.controls.LinkButton;
+			import mx.skins.halo.LinkSeparator;
+			import mx.containers.TitleWindow;
+			
+			import mx.logging.Log;
+			import mx.logging.targets.TraceTarget;
+			
+			private var _target:TraceTarget;
+			
+			[Bindable]
+			private var _window:TitleWindow;	
+			[Bindable]									
+			private var _topNavSelected:int = 0;		
+			
+			private var _welcomPageLoader:URLLoader;
+			private var _categoryLoader:ResultLoader;
+			
+			private function iniApp():void{
+				
+				_target = new TraceTarget();
+				_target.includeTime = true;
+				_target.includeLevel = true;
+				_target.includeCategory = true;
+				Log.addTarget(_target);
+				
+				/*Adding handlers to components*/
+				loader.addEventListener(MessageEvent.MESSAGE, messageHandler);				
+				loader.addEventListener(SearchResultEvent.SEARCHRESULT, searchResultHandler);
+				loader.addEventListener(VSSearchResultEvent.VSSEARCHRESULT, vsSearchResultHandler);
+				loader.addEventListener(USSearchResultEvent.USSEARCHRESULT, usSearchResultHandler);
+				loader.addEventListener(ColorSearchResultEvent.CSEARCHRESULT, csSearchResultHandler);
+				
+				loader.addEventListener(IOLoadEvent.ERROR,loadErrorHandler);
+				loader.addEventListener(AutoSuggestionEvent.AUTOSUGGESTION, searchSuggestionResultHandler);
+				
+				headerBox.autoCompleteQuery.loader.addEventListener(AutoSuggestionEvent.AUTOSUGGESTION, searchSuggestionResultHandler);
+				//headerBox.autoCompleteQuery.loader.addEventListener(KeywordGenerationEvent.KEYWORDGENERATION, keywordGenHandler);
+				/* retrieving all needed categories and populate data for 
+				 * menu and cateSelect of headerBox
+				 */
+				getCategories(); 
+				//Retrieve display products for welcome page	
+				try{											
+					Log.getLogger("ProductSearch").info("Testing");
+					_welcomPageLoader = new URLLoader();
+					var request:URLRequest = new URLRequest("./Model/results.xml");
+					_welcomPageLoader.addEventListener(Event.COMPLETE, welcomPageResultDisplayHandler);
+					_welcomPageLoader.load(request);
+				}catch(e:Error){
+					Alert.show("Unable to load results.xml");
+				}
+				
+				
+				/*Adding handlers to components*/
+				//Header part
+				headerBox.menu.addEventListener(MenuEvent.ITEM_CLICK, categorySelected);	
+				headerBox.goButton.addEventListener(MouseEvent.CLICK, goBtnClickHandler);			
+				//headerBox.searchBut.addEventListener(FlexEvent.BUTTON_DOWN, searchHandler);
+				//headerBox.query.addEventListener(FlexEvent.ENTER, searchHandler);
+				//headerBox.query.addEventListener(TextSearchEvent.TEXTCHANGE, searchSuggestionHandler);
+				headerBox.autoCompleteQuery.addEventListener(FlexEvent.ENTER, searchHandler);
+				headerBox.autoCompleteQuery.addEventListener(TextSearchEvent.TEXTCHANGE, searchSuggestionHandler);
+				headerBox.searchOptionTab.addEventListener(IndexChangedEvent.CHANGE, searchOptionTabChangeHandler);
+				//headerBox.headerImageBrowseButton.addEventListener(FlexEvent.BUTTON_DOWN, headerImageBrowseButtonHandler);
+				//headerBox.firstReq.addEventListener(FlexEvent.BUTTON_DOWN, firstHandler);
+				//headerBox.secReq.addEventListener(FlexEvent.BUTTON_DOWN, secHandler);
+				
+				//Body part
+				welcomePage.photoList.dataProvider = _products;
+				mainView.addEventListener(IndexChangedEvent.CHANGE, switchViewHandler);
+				
+				//contentBox.addEventListener(FlexEvent.INITIALIZE, mainChangeHandler);
+				contenBoxHandler();	
+			}									
+			
+			private function firstHandler(event:FlexEvent):void{
+				Alert.show("hello");
+				var params:URLVariables = new URLVariables("action=vsDragDrop");				
+				//loader.load("/AWSJavaCrawler/socketHandler.htm",params);
+				loader.load("http://localhost:8080/AWSJavaCrawler/socketHandler.htm",params);
+			}
+			private function secHandler(event:FlexEvent):void{
+				var params:URLVariables = new URLVariables("action=getPreviousSession");
+				//loader.load("/AWSJavaCrawler/productSearch.htm",params);
+				loader.load("/AWSJavaCrawler/socketHandler.htm",params);
+			}
+			
+			private function contenBoxHandler():void{			
+				
+				//welcomePage.mainImage.addEventListener(MouseEvent.DOUBLE_CLICK, mainImageDoubleClickHandler);
+				welcomePage.mainImage.addEventListener(PDoubleClickEvent.PDOUBLECLICK, mainImageDoubleClickHandler);			    
+				//contentBox.leftPanel.tabNavi.addEventListener(IndexChangedEvent.CHANGE,panelChangeHandler);	
+				//contentBox.leftPanel.textSearch.addEventListener(IndexChangedEvent.CHANGE,indexChangeHandler)
+			    /*--------------------- Upload Event Handler ------------------------------*/
+			    //contentBox.leftPanel.UploadSearch.imageUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);		
+				//contentBox.leftPanel.UploadSearch.upcateSelect.dataProvider=categories;
+				//contentBox.leftPanel.UploadSearch.imageUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);
+				//contentBox.leftPanel.UploadSearch.urlUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,UrlUpload);
+				//contentBox.leftPanel.UploadSearch.urlMethod.addEventListener(ResultEvent.RESULT,handleXML);
+				contentBox.leftPanel.visualSearch.imageUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);
+				contentBox.leftPanel.visualSearch.urlUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,vsUrlImageUploadHandler);
+				contentBox.leftPanel.visualSearch.urlMethod.addEventListener(ResultEvent.RESULT,vsUrlImageUploadXMLHandler);
+				/*--------------------- VS Button Event Handler ------------------------------*/
+				//contentBox.leftPanel.visualSearch.vsButton.addEventListener(FlexEvent.BUTTON_DOWN, vsButtonHandler);
+			    /*--------------------- Drag & Drop Event Handler ------------------------------*/
+			    contentBox.leftPanel.visualSearch.addEventListener(DragEvent.DRAG_ENTER, visualSearchDragEnterHandler);
+	    		contentBox.leftPanel.visualSearch.addEventListener(DragEvent.DRAG_DROP, visualSearchDragDropHandler);
+	    		
+	   			//contentBox.leftPanel.textSearch.addEventListener(DragEvent.DRAG_ENTER, dragEnterTextHandler);
+	    		//contentBox.leftPanel.textSearch.addEventListener(DragEvent.DRAG_DROP, dragDropTextHandler);
+			    contentBox.leftPanel.Cart.addEventListener(DragEvent.DRAG_ENTER, cartDragEnterTextHandler);
+	    		contentBox.leftPanel.Cart.addEventListener(DragEvent.DRAG_DROP, cartDragDropTextHandler);
+					
+				contentBox.mainDisplay.searchResults.gridResult.addEventListener(MouseEvent.CLICK,itemClickHandler);
+				contentBox.mainDisplay.searchResults.listResult.addEventListener(MouseEvent.CLICK,itemClickHandler);	
+				//contentBox.mainDisplay.searchResults.shopWindow.addEventListener(IndexChangedEvent.CHANGE,viewChangeHandler);
+				
+				/*--------------------- Controller Bar Event Handler ------------------------------*/
+				contentBox.mainDisplay.nextPage.addEventListener(FlexEvent.BUTTON_DOWN, pageHandler);
+				contentBox.mainDisplay.page.addEventListener(FlexEvent.ENTER, pageHandler);
+				contentBox.mainDisplay.prevPage.addEventListener(FlexEvent.BUTTON_DOWN, pageHandler);
+				contentBox.mainDisplay.pageHits.addEventListener(ListEvent.CHANGE, pageLengthChange);	
+				contentBox.mainDisplay.sortBut.addEventListener(MenuEvent.ITEM_CLICK, sortHandler);
+				contentBox.mainDisplay.viewOption.addEventListener(MenuEvent.ITEM_CLICK, searchResultViewHandler);
+				contentBox.mainDisplay.searchResults.statusBar.addEventListener(FavouriteEvent.FAVOURITE, addToFavouriteHandler);
+				contentBox.mainDisplay.SliderZoom.addEventListener(SliderEvent.CHANGE,sliderChangeHandler);
+				contentBox.mainDisplay.ColorPick.addEventListener(ColorPickerEvent.CHANGE,colorSet);
+				contentBox.mainDisplay.feedback.addEventListener(MouseEvent.CLICK, feedBackHandler);
+			}				
+									
+			private function welcomPageResultDisplayHandler(e:Event):void{
+				var x:XML = new XML(e.target.data);
+				_welcomePageProducts = x.products.item;
+				if(mainView.selectedIndex == 0){						
+					welcomePage.topProducts = _welcomePageProducts;
+					welcomePage.displayProduct = XML(_welcomePageProducts[0]);	
+				}
+			}
+
+					
+			private function showLogin(event:MouseEvent):void{								
+				_window = TitleWindow(PopUpManager.createPopUp(this,UserLogin, true));
+			}
+			
+			private function showView(view:int):void{								
+				mainView.selectedIndex = view;
+			}
+			
+			private function menuItemClickHandler(evt:ItemClickEvent):void{
+				var item:String = evt.label;					
+				if(item=="Login"){					
+					_window = TitleWindow(PopUpManager.createPopUp(this,UserLogin, true));					
+					_window.x = stage.width;
+					_window.y = 0;					
+					customMove.end();
+					customMove.play();									    					
+				}
+				if(item=="Contact us"){								
+					mainView.selectedIndex = 1;					
+				}
+				if(item=="Home"){				
+					mainView.selectedIndex = 0;					
+				}				
+			}							
+		]]>
+	</mx:Script>
+	<!-- Header -->	
+	<mx:ArrayCollection id="topNavigateItems"> <!-- Using ArrayCollection to be able to add item programatically -->
+		<mx:Array>
+			<mx:Object label="Home" data="0"/>
+			<mx:Object label="Contact us" data="1"/>
+			<mx:Object label="Login" data="2"/>
+		</mx:Array>
+	</mx:ArrayCollection>
+	
+	<header:HeadBox1 id="headerBox" backgroundColor="#CCCCCC" width="100%"/>
+	<mx:HBox right="20">
+		<!--<mx:LinkButton label="Home" click="showView(0);"	/>	
+		<mx:LinkButton label="Contact us" click="showView(1);"	/>	
+		<mx:LinkButton label="Login" click="showLogin(event);"	/>		-->		
+		<mx:LinkBar id="topNavigate" name="topNavigate" itemClick="menuItemClickHandler(event);" 
+			borderColor="#F3F2F8" themeColor="#929CB0" alpha="0.5" backgroundAlpha="0.0"
+			dataProvider="{topNavigateItems}">			
+		</mx:LinkBar>	
+	</mx:HBox>
+	
+	<!-- Body --> 
+	<mx:ViewStack id="mainView" width="100%" height="100%" top="80" creationPolicy="all">
+		<main:WelcomePage id="welcomePage" label="welcome" width="100%" height="100%" 
+			hideEffect="{zoomOut}" showEffect="{dissolveIn}"/>		
+		
+		<main:Contact id="contactPage" label="Contact us" width="100%" height="100%" 
+			hideEffect="{dissolveOut}" showEffect="{dissolveIn}"/>
+		
+		<content:ContentBox styleName="content" id="contentBox" width="100%" height="100%" 
+			hideEffect="{zoomOut}" showEffect="{dissolveIn}"/>
+													
+	</mx:ViewStack>	
+	
+	<!-- Footer -->
+	
+	<!-- Effect -->	
+	<mx:Zoom id="zoomIn" duration="500" zoomHeightFrom="0" zoomWidthFrom="0"/>
+	<mx:Zoom id="zoomOut" duration="500" zoomHeightTo="0" zoomWidthTo="0"/>
+	<mx:Dissolve id="dissolveOut" duration="300" alphaFrom="1.0" alphaTo="0.0"/>
+    <mx:Dissolve id="dissolveIn" duration="300" alphaFrom="0.0" alphaTo="1.0"/>
+	<mx:Parallel id="customMove" target="{_window}">
+		<mx:Move duration="700" 
+			xTo="{(stage.width - _window.width)/2}"
+			yTo="{(stage.height - _window.height)/2}"/>
+		<mx:WipeRight duration="1000" />		
+	</mx:Parallel>	
+</mx:Application>

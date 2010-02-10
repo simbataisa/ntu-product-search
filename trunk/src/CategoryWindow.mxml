@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="init();" paddingLeft="10" paddingBottom="10"
+	paddingRight="10">
+	<mx:Script source="controller/CategoryWindowAs.as" />
+
+	<!--
+    <mx:XMLList id="treeData">
+        <node label="Mail Box">
+            <cate label="Inbox">
+                <node label="Marketing"/>
+                <node label="Product Management"/>
+                <node label="Personal"/>
+            </cate>
+            <cate label="Outbox">
+                <node label="Professional"/>
+                <node label="Personal"/>
+            </cate>
+            <cate label="Spam"/>
+            	<cate />
+            <cate label="Sent"/>
+            	<cate />
+        </node>    
+    </mx:XMLList>
+    -->
+	  <mx:HDividedBox width="100%" height="100%">
+            <mx:Tree id="myTree" width="50%" height="100%" labelField="@label"
+                showRoot="false" dataProvider="{treeData}" change="treeChanged(event)"
+                toolTip="click explore to view"/>
+            <mx:VBox width="50%" height="100%" borderThickness="1" borderColor="#CCCCCC" borderStyle="solid"
+            	horizontalAlign="center" verticalAlign="top" >
+            	<mx:LinkBar dataProvider="{view}" itemClick="changeIndexHandler(event)" width="100%" paddingLeft="10"/>
+       	<!--    <mx:Label id="topLabel" width="100%"
+                text=" Selected Category: {selectedNode.@label}" fontWeight="bold" paddingLeft="10"/> -->
+                <mx:ViewStack id="view" width="100%" selectedIndex="0" height="100%">
+                <mx:VBox label="explore" width="100%" height="100%">
+                <mx:Form width="100%" height="100%" verticalGap="5" id="categoryDetails">
+                	<mx:FormItem label="Name">
+                		<mx:TextInput id="cateName" text="{selectedNode.@label}" />               		
+                	</mx:FormItem>
+                	<mx:FormItem label="Id">
+                		<mx:Label text="{selectedNode.@id}" />
+                	</mx:FormItem>
+                	<mx:FormItem label="Level">
+                		<mx:Label text="" />
+                	</mx:FormItem>
+                	<mx:FormItem label="No. of Products">
+                		<mx:Label id="pCount" text="" />
+                	</mx:FormItem>
+                     <mx:FormItem label="No. of Children">
+                		<mx:Label id="childCount" text="" />
+                	</mx:FormItem>
+                	<mx:FormItem>
+                		<mx:Button label="Save Changes" />
+                	</mx:FormItem>
+
+                </mx:Form>
+                 <mx:ControlBar width="100%" horizontalAlign="left">
+               <!--	<mx:Button id="newCate" label="new" /> -->
+                			<mx:Button id="addCate" label="addChild" />
+                			<mx:Button id="removeCate" label="remove" />
+                			<mx:Button id="exploreCate" label="explore" />
+                		</mx:ControlBar>
+                </mx:VBox>
+                <mx:Form width="100%" label="create new">
+                	<mx:FormItem label="category name">
+                		<mx:TextInput text="" id="newCatName" />
+                	</mx:FormItem>
+                	<mx:FormItem label="parent id">
+                		<mx:TextInput text="" id="parentId" />
+                	</mx:FormItem>
+                	<mx:FormItem>
+                		<mx:Button label="add" id="newCate" />
+                	</mx:FormItem>
+                </mx:Form>
+                </mx:ViewStack>
+
+            </mx:VBox>
+      </mx:HDividedBox>
+</mx:VBox>

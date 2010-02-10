@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" layout="vertical" verticalAlign="middle" title="Login">
+	<!-- showCloseButton="true"
+	close="titleWindow_close(event);"
+	keyDown="titleWindow_keyDown(event);"-->
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			import mx.core.IFlexDisplayObject;
+	
+			private function doLogin():void{
+				Alert.show("Login is under construction");
+			}
+			
+			private function on_closing_effect():void{									
+				customMove.play();										
+			}
+			
+			private function close_window():void{
+				PopUpManager.removePopUp(this);
+			}
+			
+			/*private function titleWindow_close(event:CloseEvent){
+				PopUpManager.removePopUp(event.target as IFlexDisplayObject);
+			}
+			
+			private function titleWindow_keyDown(evt:KeyboardEvent):void {
+                if (evt.charCode == Keyboard.ESCAPE) {
+                    this.dispatchEvent(new CloseEvent(CloseEvent.CLOSE));
+                }
+            }*/
+
+		]]>
+	</mx:Script>
+	<mx:Form>
+		<mx:FormItem label="Username: ">
+			<mx:TextInput id="username" width="100%" />
+		</mx:FormItem>
+		<mx:FormItem label="Password">
+			<mx:TextInput id="password" width="100%" displayAsPassword="true"/>			
+		</mx:FormItem>
+		<mx:HBox>
+			<mx:Button label="login" click="doLogin();" />
+			<mx:Button label="cancel" click="on_closing_effect();" />
+		</mx:HBox>
+	</mx:Form>
+	
+	<!-- Effect -->
+	<mx:Parallel id="customMove" target="{this}">		
+		<mx:Zoom duration="500" zoomHeightTo="0" zoomWidthTo="0" effectEnd="close_window();"/>
+		<!--<mx:Resize duration="500" widthTo="0" heightTo="0" effectEnd="close_window();"/>-->		
+	</mx:Parallel>	
+</mx:TitleWindow>
