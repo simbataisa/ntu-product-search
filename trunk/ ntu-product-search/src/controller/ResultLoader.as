@@ -20,6 +20,11 @@ package controller
 	[Event(name="merchant", type="controller.events.MerchantEvent")]
 	[Event(name="message", type="controller.events.MessageEvent")]
 	[Event(name="searchresult", type="controller.events.SearchResultEvent")]
+	[Event(name="vssearchresult", type="controller.events.VSSearchResultEvent")]
+	[Event(name="ussearchresult", type="controller.events.USSearchResultEvent")]
+	[Event(name="cssearchresult", type="controller.events.CSearchResultEvent")]
+	[Event(name="autosuggestion", type="controller.events.AutoSuggestionEvent")]
+	[Event(name="keywordgeneration", type="controller.events.KeywordGenerationEvent")]
 		
 	public class ResultLoader extends EventDispatcher
 	{
@@ -32,9 +37,9 @@ package controller
 			xmlLoader.addEventListener(IOErrorEvent.IO_ERROR, io_errorHandler);
 		}
 		
-		public function load(xmlFile:String, vars:URLVariables=null){
+		public function load(xmlURL:String, vars:URLVariables=null){
 			
-			var request:URLRequest = new URLRequest(xmlFile);
+			var request:URLRequest = new URLRequest(xmlURL);
 			request.method = URLRequestMethod.POST;
 			try{
 				if(vars!= null){
@@ -51,16 +56,31 @@ package controller
 		}		
 		
 		private function completeHandler(e:Event):void{		
-			xmlContent = new XML(e.target.data);			
-			if(xmlContent!=null){
-								
+			xmlContent = new XML(e.target.data);
+			var i:uint=0;
+			/*if(xmlContent.title != "search results"){
+				Alert.show(xmlContent.title);
+			}*/
+			if(xmlContent!=null){				
 				if(xmlContent.title == "search results"){
-					
 					var resultEvt:SearchResultEvent = new SearchResultEvent(SearchResultEvent.SEARCHRESULT, xmlContent);
 					dispatchEvent(resultEvt);
-				}
-				else if(xmlContent.title == "product categories"){
-				
+				}else if(xmlContent.title == "vssearch results"){									
+					var vsResultEvt:VSSearchResultEvent = new VSSearchResultEvent(VSSearchResultEvent.VSSEARCHRESULT, xmlContent);
+					dispatchEvent(vsResultEvt);					
+				}else if(xmlContent.title == "ussearch results"){									
+					var usResultEvt:USSearchResultEvent = new USSearchResultEvent(USSearchResultEvent.USSEARCHRESULT, xmlContent);
+					dispatchEvent(usResultEvt);
+				}else if(xmlContent.title == "cssearch results"){												
+					var csResultEvt:ColorSearchResultEvent = new ColorSearchResultEvent(ColorSearchResultEvent.CSEARCHRESULT, xmlContent);
+					dispatchEvent(csResultEvt);
+				}else if(xmlContent.title == "search suggestion"){					
+					var autoSuggestionEvt:AutoSuggestionEvent = new AutoSuggestionEvent(AutoSuggestionEvent.AUTOSUGGESTION, xmlContent);
+					dispatchEvent(autoSuggestionEvt);
+				}else if(xmlContent.title == "keyword generation"){					
+					var keywordGenerationEvt:KeywordGenerationEvent = new KeywordGenerationEvent(KeywordGenerationEvent.KEYWORDGENERATION, xmlContent);
+					dispatchEvent(keywordGenerationEvt);
+				}else if(xmlContent.title == "product categories"){					
 					var categoryEvt:CategoryEvent = new CategoryEvent(CategoryEvent.CATEGORY, xmlContent);
 					dispatchEvent(categoryEvt);				
 				}

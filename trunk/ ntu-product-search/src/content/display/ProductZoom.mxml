@@ -12,163 +12,9 @@
 	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" 	
 	xmlns:ns1="content.display.*"  
 	xmlns:ns2="content.display.com.adobe.wheelerstreet.fig.panzoom.*" 
-	creationComplete="init()">
-
-	<mx:Script>
-		<![CDATA[
-			import mx.collections.ArrayCollection;
-			import mx.collections.XMLListCollection;
-			import flash.events.Event;
-			import mx.events.ListEvent;
-			//Import classes so you don't have to use full names.
-            import mx.managers.DragManager;
-            import mx.core.DragSource;
-            import mx.events.*;
-            import flash.events.MouseEvent;
-            import mx.core.Application;
-            import mx.controls.Alert;
-            var fr:FileReference;
-            import mx.managers.PopUpManager;
-            
-			[Bindable]
-			public var images:ArrayCollection;
-			[Bindable]
-			public var currentImg:uint = 0;
-
-			[Bindable]
-			public var pName:Text;
-			[Bindable]
-			public var Shopping_Url:String;	
-			
-			
-			/*--------------------------------------------------------------------------*/
-			[Bindable]
-			public var ScrollList:ArrayCollection = new ArrayCollection();
-			public var anOtherCopyOfProductsList:XMLListCollection = new XMLListCollection();
-			public var totalResults:uint; 
-			public var totalPages:uint;        
-			public var currentPage:uint;	
-			public var pageLength:uint;
-			public var previousPageStop:uint;
-			public var previousPageStart:uint;
-			/*--------------------------------------------------------------------------*/      
-			
-			private var imageWidth:Number;
-			private var imageHeight:Number;        
-			
-            private function init():void {
-				fr = new FileReference();	   			  
-       		 	this.width = stage.width;
-				this.height = stage.height;
-                fr.addEventListener(Event.COMPLETE, doEvent);
-   			}
-   			private function doEvent(evt:Event):void {
-              Alert.show("complete");
-            }
-	
-			
-			
-			 private function nextImg():void{
-				currentImg = (currentImg + 1)%images.length;
-				imageViewer.centerView();
-				imageViewer.update();
-			 }
-			 private function prevImg():void{
-				currentImg = (currentImg-1 + images.length)%images.length;
-				imageViewer.centerView();
-				imageViewer.update();
-			 }
-			
-			 public function startDownload():void
-	   		 {
-	   		 var urlReq:URLRequest;
-	   		
-	   		 urlReq = new URLRequest(images[currentImg]);
-	   		 fr.download(urlReq);
-	   		 }
-	   		 
-			 private function removeMe():void {
-	            PopUpManager.removePopUp(this);
-	         }
-	         private function horizontalList_change(evt:ListEvent):void {
-             	
-             	var index:Object = HorList.selectedIndices;
-                productName.text = ScrollList[index].name;
-				productText.htmlText = ScrollList[index].description;
-				PZ_pPrice.text = parsePrice(ScrollList[index].minRetail, ScrollList[index].maxRetail);
-				Shopping_Url = ScrollList[index].url;
-			    
-			    var imgs:ArrayCollection = new ArrayCollection();
-		
-				imgs.addItemAt("C:/ProductSearch/images/"+ScrollList[index].primaryImage,0);
-				for(var i:uint =0 ; i< ScrollList[index].variantImage.length(); i++)
-					imgs.addItem("C:/ProductSearch/images/"+ScrollList[index].variantImage[i]);
-				//imgs.push(data.primaryImage);
-				images = imgs;
-				currentImg = 0;
-				imageViewer.update();
-				
-             }
-             private function parsePrice(p1:String, p2:String):String{
-				var format:String = "";
-				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
-					format += "N/A";
-				else
-					format += "$"+p1;
-					
-				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
-					format += "-N/A";
-				else
-					format += "-$"+p2;					
-				return format;
-			}
-			
-			
-            /**
-			 * This function is to handle contentBox.mainDisplay.nextPage and prevPage buttons
-			 **/ 
-			private function pageHandler(e:MouseEvent){					
-				if(e.currentTarget.id=="nextPage" && currentPage!=totalPages)	
-				{	
-					/*Alert.show("_previousPageStop "+_previousPageStop  +"\n"
-							+ "_previousPageStart "+_previousPageStart +"\n"
-							+ "_previousPage " +_currentPage);*/
-					previousPageStart = previousPageStop;
-					currentPage += 1;
-					
-					ScrollList = new ArrayCollection();
-
-					
-					if(anOtherCopyOfProductsList.length -previousPageStop > pageLength){			
-						for(var i:uint = 0; i < pageLength; i++){
-							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(previousPageStop+i));
-						}
-						previousPageStop += pageLength;	
-					}else{			
-						for(var i:uint = previousPageStop; i < anOtherCopyOfProductsList.length; i++){
-							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
-						}
-						previousPageStop = anOtherCopyOfProductsList.length-1;	
-					}	
-					/*--------------------------------------------------------------------------*/						
-									
-				}else if(e.currentTarget.id=="prevPage" && currentPage!=1)
-				{
-					
-					ScrollList = new ArrayCollection();		
-					currentPage -= 1;		
-					
-					for(var i:uint = previousPageStart - pageLength; i < previousPageStart ; i++){
-						ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
-					}
-					previousPageStop = previousPageStart;
-					if(previousPageStart>0)previousPageStart = previousPageStart - pageLength;
-					/*--------------------------------------------------------------------------*/						
-				}		
-			}		 
-		]]>
-	</mx:Script>
-		<mx:Style>
+	initialize="init()"
+	keyDown="handleKeydown(event);">
+	<mx:Style>
 		.thumbnailList
 		{
     	borderColor:                #9e9c8d;
@@ -250,9 +96,172 @@
 		   cornerRadius: 20;
 		   dropShadowEnabled: false;
 		   shadowDistance: -20;
-		}							
+		}								
 	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Text;
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.core.Application;
+            import mx.controls.Alert;
+            import mx.managers.PopUpManager;			
+            import mx.managers.DragManager;
+            import mx.core.DragSource;
+            
+            
+            import flash.events.Event;
+            import flash.events.KeyboardEvent;
+            import flash.events.MouseEvent;
+			import mx.events.ListEvent;
+            
+            
+            var fr:FileReference;
+            
+            
+			[Bindable]
+			public var images:ArrayCollection;
+			[Bindable]
+			public var currentImg:uint = 0;
+
+			[Bindable]
+			public var pName:Text;
+			[Bindable]
+			public var Shopping_Url:String;	
+			
+			
+			/*--------------------------------------------------------------------------*/
+			[Bindable]
+			public var ScrollList:ArrayCollection = new ArrayCollection();
+			public var anOtherCopyOfProductsList:XMLListCollection = new XMLListCollection();
+			public var totalResults:uint; 
+			public var totalPages:uint;        
+			public var currentPage:uint;	
+			public var pageLength:uint;
+			public var previousPageStop:uint;
+			public var previousPageStart:uint;
+			/*--------------------------------------------------------------------------*/      
+			
+			private var imageWidth:Number;
+			private var imageHeight:Number;        
+			
+            private function init():void {
+				fr = new FileReference();	   			  
+       		 	this.width = stage.width;
+				this.height = stage.height;
+                fr.addEventListener(Event.COMPLETE, doEvent);  
+                this.setFocus();              
+   			}
+   			private function doEvent(evt:Event):void {
+              Alert.show("complete");
+            }
+	
+			private function handleKeydown(event:KeyboardEvent):void{				
+				if(event.keyCode == Keyboard.ESCAPE){
+					removeMe();
+				}
+			}
+			
+			 private function nextImg():void{
+				currentImg = (currentImg + 1)%images.length;
+			//	imageViewer.centerView();
+			//	imageViewer.update();
+			 }
+			 private function prevImg():void{
+				currentImg = (currentImg-1 + images.length)%images.length;			
+			 }
+			
+			 public function startDownload():void{
+	   		 	var urlReq:URLRequest;	   		
+	   		 	urlReq = new URLRequest(images[currentImg]);
+	   		 	fr.download(urlReq);
+	   		 }
+	   		 
+			 private function removeMe():void {
+	            PopUpManager.removePopUp(this);
+	         }
+	         private function horizontalList_change(evt:ListEvent):void {
+             	
+             	var index:Object = HorList.selectedIndices;
+                productName.text = ScrollList[index].name;
+				productText.htmlText = ScrollList[index].description;
+				PZ_pPrice.text = parsePrice(ScrollList[index].minRetail, ScrollList[index].maxRetail);
+				Shopping_Url = ScrollList[index].url;
+			    
+			    var imgs:ArrayCollection = new ArrayCollection();
+		
+				imgs.addItemAt("p_images/"+ScrollList[index].primaryImage,0);
+				for(var i:uint =0 ; i< ScrollList[index].variantImage.length(); i++)
+					imgs.addItem("p_images/"+ScrollList[index].variantImage[i]);
+				//imgs.push(data.primaryImage);
+				images = imgs;
+				currentImg = 0;
+				//imageViewer.update();
+				
+             }
+             private function parsePrice(p1:String, p2:String):String{
+				var format:String = "";
+				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+					format += "N/A";
+				else
+					format += "$"+p1;
+					
+				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+					format += "-N/A";
+				else
+					format += "-$"+p2;					
+				return format;
+			}
+			
+			
+            /**
+			 * This function is to handle contentBox.mainDisplay.nextPage and prevPage buttons
+			 **/ 
+			private function pageHandler(e:MouseEvent){					
+				if(e.currentTarget.id=="nextPage" && currentPage!=totalPages)	
+				{	
+					/*Alert.show("_previousPageStop "+_previousPageStop  +"\n"
+							+ "_previousPageStart "+_previousPageStart +"\n"
+							+ "_previousPage " +_currentPage);*/
+					previousPageStart = previousPageStop;
+					currentPage += 1;
+					
+					ScrollList = new ArrayCollection();
+
+					
+					if(anOtherCopyOfProductsList.length -previousPageStop > pageLength){			
+						for(var i:uint = 0; i < pageLength; i++){
+							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(previousPageStop+i));
+						}
+						previousPageStop += pageLength;	
+					}else{			
+						for(var i:uint = previousPageStop; i < anOtherCopyOfProductsList.length; i++){
+							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
+						}
+						previousPageStop = anOtherCopyOfProductsList.length-1;	
+					}	
+					/*--------------------------------------------------------------------------*/						
+									
+				}else if(e.currentTarget.id=="prevPage" && currentPage!=1)
+				{
+					
+					ScrollList = new ArrayCollection();		
+					currentPage -= 1;		
+					
+					for(var i:uint = previousPageStart - pageLength; i < previousPageStart ; i++){
+						ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
+					}
+					previousPageStop = previousPageStart;
+					if(previousPageStart>0)previousPageStart = previousPageStart - pageLength;
+					/*--------------------------------------------------------------------------*/						
+				}		
+			}		 
+		]]>
+	</mx:Script>
+		
 <mx:Canvas id="can" width="100%" height="100%" >
+	<mx:LinkButton id="backToResult" label="Go back to search result" click="removeMe();" 
+		color="#FFFDFD" alpha="0.5" cornerRadius="10" themeColor="#D7EBF8"/>
 	<mx:VBox width="100%" height="100%" horizontalAlign="center" paddingBottom="0" 
 		paddingLeft="0" paddingRight="0" paddingTop="0">
 		<!-- Products List on Top -->
@@ -273,8 +282,7 @@
 				source="@Embed(source='images/nextImg.png')" click="pageHandler(event);" />			
 		</mx:ControlBar>	
 		<!--End of Products List on Top -->
-	
-   		<!-- Individual product's details at bottom -->
+		<!-- Individual product's details at bottom -->
 	    <mx:HBox horizontalGap="0" horizontalAlign="center" verticalAlign="middle" 
 	    	width="100%" paddingLeft="20" height="70%" paddingBottom="0" paddingRight="0" paddingTop="0">  
 	    	<!--ImageViewer on the Left -->
@@ -324,6 +332,7 @@
 			<!--End of Product details on the right -->
 		</mx:HBox>	
 		<!--End of Individual product's details at bottom -->
+   		
 	</mx:VBox>
 </mx:Canvas>
 </mx:TitleWindow>

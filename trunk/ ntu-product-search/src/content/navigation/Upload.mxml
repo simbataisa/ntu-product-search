@@ -8,150 +8,48 @@
             import mx.events.*;
             import flash.events.*;
             import flash.net.*;
+            import mx.rpc.events.ResultEvent;
+		    import mx.rpc.events.FaultEvent;
+		    import mx.collections.ArrayCollection;
             private var _loader:Loader;
        		[Bindable]
        		 public var U_url:String;
+       		[Bindable]
+			public var categoriesDropDown:ArrayCollection;
        		 
        		 
-       		 
+
+	        public function handleFault(event:FaultEvent):void
+	        {
+	           Alert.show("Error "+event.fault.faultString+" : Upload Not Successful");
+	        }
+       		
+       		 public function clear(e:MouseEvent):void
+	        {
+	           url.text="";
+	        } 
        		
        		
-         /*  // [Bindable]
-           // public 
-            var x1:uint = 1400;
-            var y1:uint = 680;
-            [Bindable] public var upload:XML
-            
-			private var fileref:FileReference;
-            private const _strUploadScript:String = "Controller/upload.php";
-            private var _winProgress:winProgress;
-            
-			//fileref = new FileReference();
-			
-			
-			public function init():void
-			{
-				fileref = new FileReference();
-				fileref.addEventListener(Event.SELECT,fileRef_select);
-				fileref.addEventListener(ProgressEvent.PROGRESS,fileRef_progress);
-				fileref.addEventListener(Event.COMPLETE,fileRef_complete);
-				fileref.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA,serverResponse);
-				
-			message.text ="initiallizing now";	
-			}
-			
-			private function browseAndUpload():void 
-			
-			{
-				
-				var imageTypes:FileFilter = new FileFilter("Images (*.jpg, *.jpeg, *.gif, *.png)", "*.jpg; *.jpeg; *.gif; *.png");
-				//var ImageTypes:Array = new Array(imageTypes);
-				
-                fileref.browse(new Array(imageTypes));
-                message.text = "";
-            }
-			 private function fileRef_select(evt:Event):void {
-			 	  
-			 	if(fileref.size < 10485760)
-			 	{
-			 	
-                try {
-                    message.text = "size (bytes): " + numberFormatter.format(fileref.size);
-                      _winProgress = new winProgress();
-                  
-                   
-                 	 _winProgress =  winProgress(PopUpManager.createPopUp(this, winProgress, false));
-                    // PopUpManager.addPopUp(_winProgress,this,true);
-                    _winProgress.btnCancel.removeEventListener("click", onUploadCanceled);
-                    _winProgress.btnCancel.addEventListener("click", onUploadCanceled);
-                    _winProgress.title = "Uploading file to Server";
-                   // _winProgress.txtFile.text = fileref.name;
-                    _winProgress.progBar.label = "0%";
-                    _winProgress.move((x1/2-_winProgress.width/2),(y1/2-_winProgress.height/2));
-                    
-                    //PopUpManager.;
-                   
-                    
-                   
-                    var sendVars:URLVariables = new URLVariables();
-                    sendVars.action = "upload";
-                    
-                    var request:URLRequest = new URLRequest();
-                   // request.data = sendVars;
-                    request.url = _strUploadScript;
-                   // request.method = URLRequestMethod.POST;
-                   
-                   	fileref.upload(request,"Filedata");
          
-                    
-                } 
-                catch (err:Error) 
-                	{
-                	    message.text = "ERROR: zero-byte file";
-              		}
-    			 }
-    			 
-    			 
-    			 else 
-    			{
-    			Alert.show("Uploaded file must be less then 10 Mb ");
-    			}
-    			 
-            }
-           
-            
-            private function onUploadCanceled(event:Event):void {
-                PopUpManager.removePopUp(_winProgress);
-                _winProgress == null;
-                fileref.cancel();
-                
-                
-            }
-            private function fileRef_progress(Event:ProgressEvent):void {
-            	 var numPerc:Number = Math.round((Number(Event.bytesLoaded) / Number(Event.bytesTotal)) * 100);
-            	 
-            	// Alert.show("ffff" + numPerc);
-                _winProgress.progBar.setProgress(numPerc, 100);
-                _winProgress.progBar.label = numPerc + "%";
-                _winProgress.progBar.validateNow();
-                if (numPerc > 90) {
-                    _winProgress.btnCancel.enabled = false;
-                } else {
-                    _winProgress.btnCancel.enabled = true;
-                }
-                ProgressBar.visible = true;
-            }
-             private function serverResponse(event:DataEvent):void {
-   				upload = XML( event.data );
-    			Alert.show(upload);
- 		 		}
 
-
-            private function fileRef_complete(evt:Event):void {
-				PopUpManager.removePopUp(_winProgress);
-				Alert.show("File(s) have been uploaded.", "Upload successful");
-                message.text += " (complete)";
-                ProgressBar.visible = false;
-                image.source = upload.item[0].url;
-
-            }
-            
-             public function test():void {
-        var request:URLRequest = new URLRequest(_strUploadScript);
-        navigateToURL(request,"_blank");
-     }
-			*/
-				
 			
 		]]>
 	</mx:Script>
-	<mx:Image id="U_image"    width="220" height="250" autoLoad="true"  horizontalAlign="center" completeEffect="Fade"/>
-	<mx:HBox width="100%" height="27" horizontalAlign="center">
-		<mx:Button label="Upload File" id="UploadButton"/>
-	</mx:HBox>
-	<mx:Canvas width="95%" height="60%">
+	<mx:Image id="U_image"    width="220" height="250"  cachePolicy="auto" autoLoad="true" horizontalAlign="center" completeEffect="Fade"/>
+	<mx:TextInput id="url"  width="100%"   text="Pls Enter URL or Select an image" click="clear(event)"/>
 		
-	</mx:Canvas>
-	<mx:NumberFormatter id="numberFormatter" />
+	<mx:HBox width="100%" height="27" horizontalAlign="center">
+		<mx:Button label="Upload File" id="imageUploadButton"/>
+		<mx:Button label="Upload URL" id="urlUploadButton"/>
+	</mx:HBox>
+	<mx:Text text="Please select a category to search....." />
+	<mx:ComboBox id="upcateSelect"   width="160" styleName="comboBox" labelField="@label" 
+		dropDownStyleName="popUp" dataProvider="{categoriesDropDown}" rowCount="{categoriesDropDown.length}"/>
+	<mx:HTTPService id="urlMethod"  fault="handleFault(event);"  resultFormat="e4x"
+	    url="PSInterface/uploadUrl.php" useProxy="false">
+	    <mx:request xmlns="">
+	        <url>{url.text}</url>
+	    </mx:request>
+	</mx:HTTPService>
 	
 </mx:VBox>

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
 	xmlns:display="content.display.*" horizontalAlign="center" creationComplete="iniWelcome();">
+	<mx:Metadata>
+    	[Event(name=PDoubleClickEvent.PDOUBLECLICK, type="controller.events.PDoubleClickEvent")]
+    </mx:Metadata>
 	<mx:Script>
 		<![CDATA[
+			import controller.events.PDoubleClickEvent;
 		
 			import mx.events.ListEvent;
-			import mx.controls.Alert;
+			import mx.controls.Alert;			
+			
 			public var currentIndex:uint = 0;
 			public var timer:Timer;
 			private var timer2:Timer;
@@ -70,6 +75,14 @@
 				else
 					return "N/A";
 			}
+			private function dispatchPDoubleClickEvent():void{				
+				var pDoubleClickEvent:PDoubleClickEvent = 
+					new PDoubleClickEvent(PDoubleClickEvent.PDOUBLECLICK,displayProduct);
+					mainImage.dispatchEvent(pDoubleClickEvent);
+				//mouseXpos.text = mouseX.toString();
+				//mouseXpos.text = mouseXpos.mouseX.toString();
+				
+			}
 		]]>
 	</mx:Script>
 	
@@ -114,10 +127,10 @@
 	<mx:Spacer height="3%"  />
 	<mx:Canvas id="display" width="60%" height="65%" borderStyle="solid" borderThickness="2"  
 			rollOver="onRollOver(event)" rollOut="onRollOut(event)"	backgroundColor="#FFFFFF">
-		<mx:Image id="mainImage" source="{displayProduct.primaryImage}" scaleContent="true" maintainAspectRatio="true" 
-			verticalAlign="bottom" horizontalAlign="center" 
-    			width="100%" height="100%" 
-    			completeEffect="Fade"/>
+		<mx:Image id="mainImage" source="p_images/{displayProduct.primaryImage}" 
+			scaleContent="true" maintainAspectRatio="true" verticalAlign="bottom" horizontalAlign="center" 
+    		width="100%" height="100%" completeEffect="Fade" toolTip="Double click to do Visual Search" 
+    		doubleClickEnabled="true" doubleClick="dispatchPDoubleClickEvent();"/>
    		<mx:VBox id="bottomControl" width="100%" height="70" bottom="0" horizontalCenter="0" 			
 			includeInLayout="false" hideEffect="{fadeOut}" showEffect="{fadeIn}"
 			styleName="bottomBar" visible="false" verticalScrollPolicy="off" verticalGap="0">
@@ -125,7 +138,8 @@
 				hideEffect="{fadeOut}" showEffect="{fadeIn}"/>
 			<mx:Label text="highest retail price : {parse(displayProduct.maxRetail)}" styleName="subtitle" width="100%"/>
 			<mx:Label text="lowest retial price : {parse(displayProduct.minRetail)}" styleName="subtitle" width="100%"/>
-		</mx:VBox>    	 
+		</mx:VBox> 	
+		<!--<mx:Text id="mouseXpos" text="Mouse X :"/>-->	
 	</mx:Canvas>
 	<mx:Spacer height="1%" />
 	<mx:HBox width="100%" height="140" backgroundColor="#555555" horizontalAlign="center" verticalAlign="middle" paddingTop="10" paddingBottom="10">
@@ -139,34 +153,5 @@
 		   </mx:itemRenderer>
 		   
 	</mx:HorizontalList>
-	</mx:HBox>
-	<!-- general product Info -->
-	<!--
-	<mx:Grid>
-		<mx:GridRow>
-			<mx:GridItem>
-				<mx:TileList id="test1" maxColumns="4" maxRows="2" dataProvider="{showP1}">
-				<mx:itemRenderer>
-					<mx:Component>
-						<display:ProductIntro>
-							
-						</display:ProductIntro>
-					</mx:Component>
-				</mx:itemRenderer>
-				</mx:TileList>
-			</mx:GridItem>
-			<mx:GridItem>
-				<mx:TileList id="test2" maxColumns="4" maxRows="2" dataProvider="{showP1}">
-				<mx:itemRenderer>
-					<mx:Component>
-						<display:ProductIntro>
-							
-						</display:ProductIntro>
-					</mx:Component>
-				</mx:itemRenderer>
-				</mx:TileList>
-			</mx:GridItem>
-		</mx:GridRow>
-	</mx:Grid>
-	-->
+	</mx:HBox>	
 </mx:VBox>

@@ -29,13 +29,11 @@
 	</mx:Style>
 	<mx:Canvas id="imageBox" width="95%" height="90" horizontalScrollPolicy="off"
 		verticalScrollPolicy="off" backgroundColor="#FFFFFF" backgroundAlpha="0.2"
-		mouseOver="mouseOverHandler(event)" 
-		mouseOut="mouseOffHandler(event)" styleName="mouseOff">
-			<mx:Image  source="{data.primaryImage}" width="100%" height="100%" 
+		mouseOver="mouseOverHandler(event)" mouseOut="mouseOffHandler(event)" 
+		toolTip="Samples of search result related to your query" styleName="mouseOff">
+			<mx:Image  source="./p_images/{data.primaryImage}" width="100%" height="100%" 
 				horizontalAlign="center" verticalAlign="middle" 
-				useHandCursor="true"
-				>
-			</mx:Image>
+				useHandCursor="true"/>
 	</mx:Canvas>
 
 </mx:VBox>

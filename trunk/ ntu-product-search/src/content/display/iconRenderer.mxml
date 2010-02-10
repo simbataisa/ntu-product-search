@@ -37,7 +37,7 @@
 		zoomHeightFrom="1"  /> 
     <mx:Resize id="r" heightTo="180" heightFrom="55" widthFrom="55" widthTo="180"    
     	effectStart="resizeInst = ResizeInstance(event.effectInstance);" effectEnd ="resizeInst=null"/>
-    <mx:Image id="image"  x="0" y="0" width="60" height="60" source="C:/ProductSearch/images/{data.primaryImage}" 
+    <mx:Image id="image"  x="0" y="0" width="60" height="60" source="p_images/{data.primaryImage}" 
     	mouseOver="doZoom(event)" mouseOut="doZoom(event)"/>
     <mx:Label text="{data.name}" width="120" textAlign="left"/>
 </mx:VBox>

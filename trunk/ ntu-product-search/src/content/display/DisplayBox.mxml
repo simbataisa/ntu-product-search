@@ -65,7 +65,9 @@
 		<mx:Spacer width="5%" />
 		<mx:Label text="Color Sort:" />
 		<mx:ColorPicker id="ColorPick"  dataProvider="{simpleDP}" visible="true"  width="45" height="20" toolTip="Select a color to sort"/>
-		<mx:Spacer width="30%"/>		
+		<mx:Spacer width="5%"/>
+		<mx:Image source="images/feedback.png" height="30" width="100" id="feedback"/>
+		<mx:Spacer width="10%"/>		
 		<mx:Label text="Hits per page" />
 		<mx:ComboBox id="pageHits">
 			<mx:dataProvider>
