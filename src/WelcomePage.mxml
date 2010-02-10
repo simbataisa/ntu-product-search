@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:display="content.display.*" horizontalAlign="center" creationComplete="iniWelcome();">
+	<mx:Metadata>
+    	[Event(name=PDoubleClickEvent.PDOUBLECLICK, type="controller.events.PDoubleClickEvent")]
+    </mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			import controller.events.PDoubleClickEvent;
+		
+			import mx.events.ListEvent;
+			import mx.controls.Alert;			
+			
+			public var currentIndex:uint = 0;
+			public var timer:Timer;
+			private var timer2:Timer;
+			[Bindable]
+			public var topProducts:XMLList;
+			//[Bindable]
+			//public var showP1:XMLList;
+			[Bindable]			
+			public var displayProduct:XML;
+			private function onRollOver(event:MouseEvent):void
+			{
+				bottomControl.visible = true;
+				productTitle.visible = true;
+			}
+			
+			private function onRollOut(event:MouseEvent):void
+			{
+				bottomControl.visible = false;
+				productTitle.visible = false;
+			}
+			
+			private function itemClickHandler(e:ListEvent){
+				displayProduct = topProducts[e.currentTarget.selectedIndex];
+			}
+			
+			private function iniWelcome(){
+				timer = new Timer(6000);
+				timer.addEventListener(TimerEvent.TIMER, slideHandler);
+				
+				timer2 = new Timer(3000, 1);
+				timer2.addEventListener(TimerEvent.TIMER_COMPLETE, hideBottomControl);
+				timer.start();
+				timer2.start();
+				bottomControl.visible = true;
+				productTitle.visible = true;
+				/*
+				showP1 = new XMLList();
+				for(var i:uint = 0; i<8;i++){
+					showP1[i] = topProducts[i];	
+				}
+				Alert.show(showP1.toXMLString());
+				*/
+			}
+			
+			private function slideHandler(e:TimerEvent){
+				currentIndex = (currentIndex + 1 + topProducts.length())%topProducts.length();
+				displayProduct = topProducts[currentIndex];
+				bottomControl.visible = true;
+				productTitle.visible = true;
+				timer2.start();
+			}
+			
+			private function hideBottomControl(e:TimerEvent){
+		
+				bottomControl.visible = false;
+				productTitle.visible = false;
+			}
+			
+			private function parse(p:String):String{
+				if(p.indexOf("-1") <= -1 && p!="" && p!=null)
+					return "$"+p;
+				else
+					return "N/A";
+			}
+			private function dispatchPDoubleClickEvent():void{				
+				var pDoubleClickEvent:PDoubleClickEvent = 
+					new PDoubleClickEvent(PDoubleClickEvent.PDOUBLECLICK,displayProduct);
+					mainImage.dispatchEvent(pDoubleClickEvent);
+				//mouseXpos.text = mouseX.toString();
+				//mouseXpos.text = mouseXpos.mouseX.toString();
+				
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Style>
+		.thumbnailList
+	{
+    	borderColor:                #9e9c8d;
+		backgroundColor:            #9e9c8d;
+		selectionColor:             #9e9c8d;
+		rollOverColor:              #9e9c8d;
+		themeColor:                 #383832;
+    	borderStyle:                solid;
+   	 	cornerRadius:               8;
+	}
+		.bottomBar{
+			background-alpha : 0.5;
+			background-color : #000000;	
+			
+		}
+		
+		.label{
+			font-weight:bold;
+			font-sharpness:2;
+			color: #FFFFFF;
+			font-size: 20;
+			text-align:center;
+				
+		}
+		.subtitle{
+			font-weight:bold;
+			font-sharpness:2;
+			color: #FFFFFF;
+			font-size:10;
+			text-align:center;	
+		}
+	</mx:Style>
+	<mx:Style source="css/customHScroll.css" />
+
+    <mx:Fade id="fadeOut" duration="1000" alphaFrom="1.0" alphaTo="0.0"/>
+    <mx:Fade id="fadeIn" duration="1000" alphaFrom="0.0" alphaTo="1.0"/>
+
+	<mx:Spacer height="3%"  />
+	<mx:Canvas id="display" width="60%" height="65%" borderStyle="solid" borderThickness="2"  
+			rollOver="onRollOver(event)" rollOut="onRollOut(event)"	backgroundColor="#FFFFFF">
+		<mx:Image id="mainImage" source="p_images/{displayProduct.primaryImage}" 
+			scaleContent="true" maintainAspectRatio="true" verticalAlign="bottom" horizontalAlign="center" 
+    		width="100%" height="100%" completeEffect="Fade" toolTip="Double click to do Visual Search" 
+    		doubleClickEnabled="true" doubleClick="dispatchPDoubleClickEvent();"/>
+   		<mx:VBox id="bottomControl" width="100%" height="70" bottom="0" horizontalCenter="0" 			
+			includeInLayout="false" hideEffect="{fadeOut}" showEffect="{fadeIn}"
+			styleName="bottomBar" visible="false" verticalScrollPolicy="off" verticalGap="0">
+			<mx:Label id="productTitle"  text="{displayProduct.name}" styleName="label" width="100%"
+				hideEffect="{fadeOut}" showEffect="{fadeIn}"/>
+			<mx:Label text="highest retail price : {parse(displayProduct.maxRetail)}" styleName="subtitle" width="100%"/>
+			<mx:Label text="lowest retial price : {parse(displayProduct.minRetail)}" styleName="subtitle" width="100%"/>
+		</mx:VBox> 	
+		<!--<mx:Text id="mouseXpos" text="Mouse X :"/>-->	
+	</mx:Canvas>
+	<mx:Spacer height="1%" />
+	<mx:HBox width="100%" height="140" backgroundColor="#555555" horizontalAlign="center" verticalAlign="middle" paddingTop="10" paddingBottom="10">
+	<mx:HorizontalList id="photoList" verticalAlign="middle" useHandCursor="true" 
+		    width="60%" height="120" dataProvider="{topProducts}" styleName="thumbnailList" 		   
+		    itemClick="itemClickHandler(event)" horizontalScrollBarStyleName="MyScrollBar">
+		   <mx:itemRenderer>
+		   		<mx:Component>
+		   			<display:MyThumbnail />
+		   		</mx:Component>
+		   </mx:itemRenderer>
+		   
+	</mx:HorizontalList>
+	</mx:HBox>	
+</mx:VBox>

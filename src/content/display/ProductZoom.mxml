@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns="*" xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:controls="qs.controls.*" xmlns:smooth="imageControls.*" 
+	xmlns:eff="com.adobe.effects.*" xmlns:views="views.*"
+	layout="vertical" 
+	height="100%" width="100%"
+	textAlign="center" color="#333333" 
+	backgroundColor="#000000" backgroundAlpha="0.9"
+	borderThicknessLeft="0" borderThicknessRight="0" 
+	borderThicknessTop="0" borderThicknessBottom="0"
+	headerHeight="25" verticalScrollPolicy="off" horizontalScrollPolicy="off" 
+	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" 	
+	xmlns:ns1="content.display.*"  
+	xmlns:ns2="content.display.com.adobe.wheelerstreet.fig.panzoom.*" 
+	initialize="init()"
+	keyDown="handleKeydown(event);">
+	<mx:Style>
+		.thumbnailList
+		{
+    	borderColor:                #9e9c8d;
+		backgroundColor:            #9e9c8d;
+		selectionColor:             #9e9c8d;
+		rollOverColor:              #9e9c8d;
+		themeColor:                 #383832;
+    	borderStyle:                solid;
+   	 	cornerRadius:               8;
+		}
+		.HScrollBar {
+		   cornerRadius: 7;
+		   highlightAlphas: 0.49, 0.26;
+		   fillAlphas: 0, 1, 0.52, 1;
+		   fillColors: #ffffff, #333333, #000033, #333333;
+		   trackColors: #000000, #666666;
+		   themeColor: #666666;
+		   borderColor: #000000;
+		}
+
+		Panel {
+			borderColor: #333333;
+  			headerHeight: 0;	
+			borderThicknessLeft: 4;
+			borderThicknessRight: 4;
+			borderThicknessTop: 4;
+			borderThicknessBottom: 4;		
+			color: #999999;
+		}
+	
+		Button {		
+			color: #000000;
+			cornerRadius: 7;
+		}
+
+		.ZoomInButton {		
+			disabledSkin: Embed(source="icons/demoIcons.swf",symbol="MinusButton_Disabled");
+			downSkin: Embed(source="icons/demoIcons.swf",symbol="MinusButton_Down");
+			overSkin: Embed(source="icons/demoIcons.swf",symbol="MinusButton_Over");
+			upSkin: Embed(source="icons/demoIcons.swf",symbol="MinusButton_Up");		
+		}	
+
+		.ZoomOutButton {		
+			disabledSkin: Embed(source="icons/demoIcons.swf",symbol="PlusButton_Disabled");
+			downSkin: Embed(source="icons/demoIcons.swf",symbol="PlusButton_Down");
+			overSkin: Embed(source="icons/demoIcons.swf",symbol="PlusButton_Over");
+			upSkin: Embed(source="icons/demoIcons.swf",symbol="PlusButton_Up");
+		}	
+
+		Label {
+			color: #808080;
+		}
+		
+		CheckBox {
+			color: #808080;			
+		}
+		
+		VBox {
+			borderStyle: solid;
+			horizontalAlign: center; 
+			cornerRadius: 10; 
+			backgroundAlpha: 0.5; 
+			backgroundColor: #000000;
+			borderThickness: 0; 		
+		}
+		.TextArea {
+		     fontFamily: Verdana;
+		   fontSize: 14;
+		   color: #ffffff;
+		   fontWeight: bold;
+		   paddingLeft: 12;
+		   paddingRight: 12;
+		   leading: 2;
+		   textIndent: 0;
+		   letterSpacing: 0;
+		   backgroundAlpha: 0.2;
+		   backgroundColor: #666666;
+		   borderColor: #000000;
+		   cornerRadius: 20;
+		   dropShadowEnabled: false;
+		   shadowDistance: -20;
+		}								
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Text;
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
+			import mx.core.Application;
+            import mx.controls.Alert;
+            import mx.managers.PopUpManager;			
+            import mx.managers.DragManager;
+            import mx.core.DragSource;
+            
+            
+            import flash.events.Event;
+            import flash.events.KeyboardEvent;
+            import flash.events.MouseEvent;
+			import mx.events.ListEvent;
+            
+            
+            var fr:FileReference;
+            
+            
+			[Bindable]
+			public var images:ArrayCollection;
+			[Bindable]
+			public var currentImg:uint = 0;
+
+			[Bindable]
+			public var pName:Text;
+			[Bindable]
+			public var Shopping_Url:String;	
+			
+			
+			/*--------------------------------------------------------------------------*/
+			[Bindable]
+			public var ScrollList:ArrayCollection = new ArrayCollection();
+			public var anOtherCopyOfProductsList:XMLListCollection = new XMLListCollection();
+			public var totalResults:uint; 
+			public var totalPages:uint;        
+			public var currentPage:uint;	
+			public var pageLength:uint;
+			public var previousPageStop:uint;
+			public var previousPageStart:uint;
+			/*--------------------------------------------------------------------------*/      
+			
+			private var imageWidth:Number;
+			private var imageHeight:Number;        
+			
+            private function init():void {
+				fr = new FileReference();	   			  
+       		 	this.width = stage.width;
+				this.height = stage.height;
+                fr.addEventListener(Event.COMPLETE, doEvent);  
+                this.setFocus();              
+   			}
+   			private function doEvent(evt:Event):void {
+              Alert.show("complete");
+            }
+	
+			private function handleKeydown(event:KeyboardEvent):void{				
+				if(event.keyCode == Keyboard.ESCAPE){
+					removeMe();
+				}
+			}
+			
+			 private function nextImg():void{
+				currentImg = (currentImg + 1)%images.length;
+			//	imageViewer.centerView();
+			//	imageViewer.update();
+			 }
+			 private function prevImg():void{
+				currentImg = (currentImg-1 + images.length)%images.length;			
+			 }
+			
+			 public function startDownload():void{
+	   		 	var urlReq:URLRequest;	   		
+	   		 	urlReq = new URLRequest(images[currentImg]);
+	   		 	fr.download(urlReq);
+	   		 }
+	   		 
+			 private function removeMe():void {
+	            PopUpManager.removePopUp(this);
+	         }
+	         private function horizontalList_change(evt:ListEvent):void {
+             	
+             	var index:Object = HorList.selectedIndices;
+                productName.text = ScrollList[index].name;
+				productText.htmlText = ScrollList[index].description;
+				PZ_pPrice.text = parsePrice(ScrollList[index].minRetail, ScrollList[index].maxRetail);
+				Shopping_Url = ScrollList[index].url;
+			    
+			    var imgs:ArrayCollection = new ArrayCollection();
+		
+				imgs.addItemAt("p_images/"+ScrollList[index].primaryImage,0);
+				for(var i:uint =0 ; i< ScrollList[index].variantImage.length(); i++)
+					imgs.addItem("p_images/"+ScrollList[index].variantImage[i]);
+				//imgs.push(data.primaryImage);
+				images = imgs;
+				currentImg = 0;
+				//imageViewer.update();
+				
+             }
+             private function parsePrice(p1:String, p2:String):String{
+				var format:String = "";
+				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+					format += "N/A";
+				else
+					format += "$"+p1;
+					
+				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+					format += "-N/A";
+				else
+					format += "-$"+p2;					
+				return format;
+			}
+			
+			
+            /**
+			 * This function is to handle contentBox.mainDisplay.nextPage and prevPage buttons
+			 **/ 
+			private function pageHandler(e:MouseEvent){					
+				if(e.currentTarget.id=="nextPage" && currentPage!=totalPages)	
+				{	
+					/*Alert.show("_previousPageStop "+_previousPageStop  +"\n"
+							+ "_previousPageStart "+_previousPageStart +"\n"
+							+ "_previousPage " +_currentPage);*/
+					previousPageStart = previousPageStop;
+					currentPage += 1;
+					
+					ScrollList = new ArrayCollection();
+
+					
+					if(anOtherCopyOfProductsList.length -previousPageStop > pageLength){			
+						for(var i:uint = 0; i < pageLength; i++){
+							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(previousPageStop+i));
+						}
+						previousPageStop += pageLength;	
+					}else{			
+						for(var i:uint = previousPageStop; i < anOtherCopyOfProductsList.length; i++){
+							ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
+						}
+						previousPageStop = anOtherCopyOfProductsList.length-1;	
+					}	
+					/*--------------------------------------------------------------------------*/						
+									
+				}else if(e.currentTarget.id=="prevPage" && currentPage!=1)
+				{
+					
+					ScrollList = new ArrayCollection();		
+					currentPage -= 1;		
+					
+					for(var i:uint = previousPageStart - pageLength; i < previousPageStart ; i++){
+						ScrollList.addItem(anOtherCopyOfProductsList.getItemAt(i));
+					}
+					previousPageStop = previousPageStart;
+					if(previousPageStart>0)previousPageStart = previousPageStart - pageLength;
+					/*--------------------------------------------------------------------------*/						
+				}		
+			}		 
+		]]>
+	</mx:Script>
+		
+<mx:Canvas id="can" width="100%" height="100%" >
+	<mx:LinkButton id="backToResult" label="Go back to search result" click="removeMe();" 
+		color="#FFFDFD" alpha="0.5" cornerRadius="10" themeColor="#D7EBF8"/>
+	<mx:VBox width="100%" height="100%" horizontalAlign="center" paddingBottom="0" 
+		paddingLeft="0" paddingRight="0" paddingTop="0">
+		<!-- Products List on Top -->
+		<mx:ControlBar width="100%" height="13%" 
+			horizontalAlign="center" verticalAlign="middle" 
+			paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0">
+			<mx:Image id="prevPage" toolTip="Click to see previous page of products"
+				source="@Embed(source='images/prevImg.png')" click="pageHandler(event);"/>	
+			<mx:HorizontalList id="HorList"  height="100%"  
+				verticalAlign="top" textAlign="center" horizontalCenter="true"
+				horizontalScrollPolicy="auto" 
+				dataProvider="{ScrollList}" rollOverColor="#A5A5AF" backgroundAlpha="0" 
+				itemRenderer="content.display.iconRenderer"  columnCount="10"
+				rowHeight="100" columnWidth="100" styleName="thumbnailList"
+				horizontalScrollBarStyleName="HScrollBar"
+				change="horizontalList_change(event)"/>
+			<mx:Image id="nextPage" toolTip="Click to see next page of products"				
+				source="@Embed(source='images/nextImg.png')" click="pageHandler(event);" />			
+		</mx:ControlBar>	
+		<!--End of Products List on Top -->
+		<!-- Individual product's details at bottom -->
+	    <mx:HBox horizontalGap="0" horizontalAlign="center" verticalAlign="middle" 
+	    	width="100%" paddingLeft="20" height="70%" paddingBottom="0" paddingRight="0" paddingTop="0">  
+	    	<!--ImageViewer on the Left -->
+	    	<mx:Image id="prev" source="@Embed(source='images/prevImg.png')" click="prevImg();"/>
+		    <mx:VBox height="80%" width="70%"  verticalAlign="top" 
+		    	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="10">
+			    <mx:Canvas width="100%" height="100%" backgroundColor="#333333" >
+					
+					<ns2:ImageViewer id="imageViewer" imageURL="{images[currentImg]}" bitmapScaleFactorMax="5"
+						bitmapScaleFactorMin=".05" width="100%" height="100%" x="0" y="0"  />		
+					
+					<!--Navigation controlls -->
+					<mx:VBox left="10" top="10"	width="20">				
+						<mx:Spacer/>				
+						<mx:Button styleName="ZoomOutButton" toolTip="Zoom In"	click="{imageViewer.zoom('in');}"/>					
+						<mx:HBox width="20">				
+							<mx:VSlider
+								minimum="{ imageViewer.bitmapScaleFactorMin }" 
+								maximum="{ imageViewer.bitmapScaleFactorMax }" 
+								value  ="{ imageViewer.bitmapScaleFactor }"	
+								change ="{ imageViewer.setZoom(VSlider(event.currentTarget).value) }" 				
+								snapInterval=".001"	liveDragging="true"/>											
+						</mx:HBox>	
+						<mx:Button 
+							styleName="ZoomInButton"
+							toolTip="Zoom Out"
+							click="{ imageViewer.zoom('out'); }"/>					
+						<mx:Spacer/>										
+					</mx:VBox>	
+				</mx:Canvas>
+	    		<mx:Button label="Click to Download Product" click="startDownload()"/>
+	    	</mx:VBox>
+			<mx:Image id="next" source="@Embed(source='images/nextImg.png')" click="nextImg();" />
+			<!--End of ImageViewer on the Left -->
+			<!--Product details on the right -->
+			<mx:VBox width="100%" height="100%" horizontalScrollPolicy="auto" verticalScrollPolicy="auto" horizontalAlign="center" paddingLeft="0" paddingRight="0" paddingTop="0" paddingBottom="0">
+				<mx:Text id="productName" width="100%" height="12%" fontSize="24" color="#F8FBFC" textAlign="center" paddingTop="5"/>
+				<mx:TextArea id="productText"  styleName="TextArea" textAlign="left"
+					verticalScrollPolicy="auto" width="80%" height="60%" editable="false" />						
+				<mx:HBox width="100%" textAlign="center" horizontalAlign="center" verticalAlign="middle">
+					<mx:Label text="Price: " fontSize="16" color="#6C7072"/>
+					<mx:Label id="PZ_pPrice" width="223" color="#FDFDFD" fontSize="16" letterSpacing="1"/>
+				</mx:HBox>				
+				<mx:LinkButton label="Go Shopping!!" click="{ navigateToURL(new URLRequest(Shopping_Url),'_blank') }" fontStyle="normal" 
+					textAlign="center" width="270" color="#FAF7F7" fontSize="16" fontThickness="2"/>
+			</mx:VBox>	
+			<!--End of Product details on the right -->
+		</mx:HBox>	
+		<!--End of Individual product's details at bottom -->
+   		
+	</mx:VBox>
+</mx:Canvas>
+</mx:TitleWindow>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" horizontalAlign="center" paddingLeft="20" paddingRight="20" 
+	creationComplete="iniUserCanvas();">
+	<mx:Style>
+		.aForm{
+			font-size:15;
+			font-thickness:10;
+			font-weight:bold;
+		}
+	</mx:Style>
+	<mx:Script>
+		<![CDATA[
+			import controller.events.UserLoginEvent;
+			import controller.UserManager;
+			//import controller.ResultLoader;
+			
+			private var userManager:UserManager = new UserManager();
+			//private var loader:ResultLoader = new ResultLoader();
+			public var isLogin:Boolean = false;
+			public var fullName:String;
+			private function iniUserCanvas():void{
+				userManager.addEventListener(UserLoginEvent.LOGINFAIL, loginHandler);
+				userManager.addEventListener(UserLoginEvent.LOGINSUCCESS, loginHandler);
+			}
+			private function loginHandler(e:UserLoginEvent):void{
+				if(e.type == UserLoginEvent.LOGINFAIL)
+					isLogin = false;
+				else{ 
+					isLogin = true;
+					fullName = e.message.account.fullname;
+					User.title= "Profile";
+					userArea.visible = true;
+					profileNavigate.visible = true;
+					loginForm.visible = false;
+				}
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Spacer height="10%" />
+	<mx:Panel id="User" title="Login" width="70%"  height="70%">
+		<mx:LinkBar id="profileNavigate" dataProvider="{userArea}" visible="false" />
+		<mx:ViewStack id="userArea" visible="false">
+			<mx:Canvas id="information" label="Info" >
+				
+			</mx:Canvas>
+			<mx:Canvas id="favorite" label="Favorite">
+				
+			</mx:Canvas>
+			<mx:Canvas id="recommend" label="Recommend">
+				
+			</mx:Canvas>
+			<mx:Canvas id="lookFor" label="Looking for">
+				
+			</mx:Canvas>
+		</mx:ViewStack>
+		
+			<mx:Form id="loginForm" width="100%" height="100%" styleName="aForm" defaultButton="{loginBut}">
+				<mx:FormItem label="Username">
+					<mx:TextInput id="username"/>
+				</mx:FormItem>
+				<mx:FormItem label="Password">
+					<mx:TextInput id="pass" displayAsPassword="true"/>
+				</mx:FormItem>
+				<mx:FormItem>
+					<mx:Button label="login" id="loginBut" buttonDown="userManager.login(username.text,pass.text);" />
+				</mx:FormItem>
+			</mx:Form>
+
+	</mx:Panel>
+</mx:VBox>

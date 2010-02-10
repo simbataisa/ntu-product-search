@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100" height="110"
+	verticalScrollPolicy="off" horizontalScrollPolicy="off" styleName="gridView" verticalGap="0" 
+	>
+
+	<mx:Script>
+		<![CDATA[
+
+			private function mouseOverHandler(e:MouseEvent){
+				imageBox.styleName = "mouseOver";
+			}
+			private function mouseOffHandler(e:MouseEvent){
+				imageBox.styleName = "mouseOff";
+			}
+		]]>
+	</mx:Script>
+	<mx:Style>
+		.mouseOver{
+			border-style : solid;
+			border-thickness : 3;	
+			border-color : #FFFFFF;		
+		
+		}
+		
+		.mouseOff{
+			border-style : solid;
+			border-thickness : 1;
+		}
+	</mx:Style>
+	<mx:Canvas id="imageBox" width="95%" height="90" horizontalScrollPolicy="off"
+		verticalScrollPolicy="off" backgroundColor="#FFFFFF" backgroundAlpha="0.2"
+		mouseOver="mouseOverHandler(event)" mouseOut="mouseOffHandler(event)" 
+		toolTip="Samples of search result related to your query" styleName="mouseOff">
+			<mx:Image  source="./p_images/{data.primaryImage}" width="100%" height="100%" 
+				horizontalAlign="center" verticalAlign="middle" 
+				useHandCursor="true"/>
+	</mx:Canvas>
+
+</mx:VBox>

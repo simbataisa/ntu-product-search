@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="80%" height="80%" 
+	xmlns:navigation="content.navigation.*" xmlns:display="content.display.*"
+	 horizontalGap="0" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+	<mx:Style>
+		.content{
+			padding-bottom:0;
+			padding-left:0;
+			padding-right:0;
+			padding-top:0;	
+			
+		}
+	</mx:Style>
+	<navigation:LeftPanel id="leftPanel" width="25%" height="100%" styleName="content"/>
+
+	<display:DisplayBox width="75%" height="100%" styleName="content" paddingLeft="0" id="mainDisplay"/>
+
+</mx:HBox>

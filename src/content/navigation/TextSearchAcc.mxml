@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" themeColor="#FE7008" paddingRight="0" width="731" height="516">
+	<mx:Style>
+		.details{
+			horizontal-align:left;
+			padding-left: 10;
+			padding-right: 10;
+			padding-top: 5;	
+			vertical-align:bottom;
+		}
+		.pField{
+			font-weight:bold;	
+		}
+
+
+	</mx:Style>
+	<mx:Style source="css/customVScroll.css" />
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			//later , pass an object here as AS supports object iteration
+			import mx.controls.Alert;
+			//import mx.effects.Zoom;
+			[Bindable]
+			public var details:Object;
+			[Bindable]
+			public var pCategories:XMLList;
+			
+			[Bindable]
+			public var currentImgId: uint;
+			
+			[Bindable]
+			public var images:ArrayCollection;
+			
+			[Bindable]
+			public var allGames:ArrayCollection = new ArrayCollection();
+			
+			
+
+			private function changeImage(e:FlexEvent):void{
+	
+				if(images.length > 0 ){
+					if(e.currentTarget.id=="nextImg"){
+						currentImgId  = (currentImgId + 1)% images.length;
+					}
+					else if(e.currentTarget.id=="prevImg"){
+						
+						currentImgId = ((currentImgId - 1) + images.length)%images.length;
+					}
+				}
+				
+			}	
+			private function parsePrice(p1:String, p2:String):String{
+				var format:String = "";
+				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+					format += "N/A";
+				else
+					format += "$"+p1;
+					
+				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+					format += "-N/A";
+				else
+					format += "-$"+p2;					
+				return format;
+			}
+		]]>
+	</mx:Script>
+	<mx:VBox label="Product Details" styleName="details" verticalScrollPolicy="auto" 
+		horizontalScrollPolicy="off" 
+		width="100%" horizontalAlign="left" 
+		verticalScrollBarStyleName="myVScrollBar" height="98%">
+		<mx:VBox  horizontalAlign="center" width="100%" verticalAlign="middle" paddingLeft="0" paddingRight="0"  > 		
+			<mx:Image id="pImage" source="{images[currentImgId]}" width="220" height="250" 
+				completeEffect="Fade" horizontalAlign="center"/>
+			<mx:HBox width="240" horizontalAlign="center" >
+				<mx:Button id="nextImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/prev.png')" alpha="0.5"/>
+				<mx:Button id="prevImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/next.png')" alpha="0.5"/>
+			</mx:HBox>	
+		</mx:VBox>
+				
+		<mx:Grid id="aProduct" horizontalGap="0" verticalGap="0" width="100%" height="100%">
+		<mx:GridRow >
+			<mx:GridItem>
+				<mx:Label text="{details.name}" width="235" fontWeight="bold" />
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow >
+			<mx:GridItem  styleName="pField">
+				<mx:Label text="Description:" styleName="pField" />
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow >
+			<mx:GridItem colSpan="2" textAlign="left" >
+				<mx:Text id="pDescrip" htmlText="{details.description}" width="235"/>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow >
+			<mx:GridItem  colSpan="2" width="100%">
+			<mx:HBox width="100%">
+				<mx:Label text="Price: " styleName="pField" />
+				<mx:Label text="{parsePrice(details.minRetail, details.maxRetail)}" />
+			</mx:HBox>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow >
+			<mx:GridItem  colSpan="2" width="100%">
+			<mx:HBox width="100%">
+				<mx:Label text="Average Rating: " styleName="pField" />
+				<mx:Label text="{details.rating}" />
+			</mx:HBox>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem width="100%" height="100%"  colSpan="2">
+				<mx:HBox width="100%">
+				<mx:Label text="Merchant:" styleName="pField"/>
+				<mx:Label id="Merchant" text="{details.merchant}" />
+				</mx:HBox>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow width="245" height="100%">
+			<mx:GridItem width="100%" height="100%"  colSpan="2">
+			<mx:HBox width="100%">
+				<mx:Label text="Product ID:" styleName="pField"/> 
+				<mx:Label id="pID" text="{details.db_id}" />
+			</mx:HBox>
+			</mx:GridItem>		
+		</mx:GridRow>
+		</mx:Grid>
+		
+		<mx:ControlBar themeColor="haloSilver" height="5%" paddingTop="0" paddingBottom="0" paddingLeft="0">
+			<mx:LinkButton id="addCart" label="Add to cart" click="Alert.show('add this product to your cart');"/>
+			<mx:LinkButton id="Share" label="Tell a friend" />
+			<mx:LinkButton id="Subscribe" label="Favorite" />
+		</mx:ControlBar> 
+	</mx:VBox>
+	<!--____________________________________________ REFINE SEARCH RESULTS ________________________________________
+	<mx:VBox id="refineForm" label="Refine Search" paddingLeft="0" horizontalGap="0" verticalScrollPolicy="off">
+		<mx:Form  height="100%" verticalGap="15">
+			<mx:FormItem label="Product">
+				<mx:TextInput id="pName" />
+			</mx:FormItem>
+			<mx:FormItem label="Category" id="test">
+				<mx:ComboBox id="pCategory" dataProvider="{pCategories}" labelField="@label" width="160"/>
+			</mx:FormItem>
+			<mx:FormItem label="Price Range" width="249">
+				<mx:HBox>					
+					<mx:Label text="From" />
+					<mx:TextInput id="lowerLimit" width="40"/>
+					<mx:Label text="To" />
+					<mx:TextInput id="upperLimit" width="40"/>
+				</mx:HBox>
+			</mx:FormItem>
+			<mx:FormItem label="Rating" width="249">
+				<mx:HBox>					
+					<mx:Label text="From" />
+					<mx:TextInput id="lowRateLim" width="40"/>
+					<mx:Label text="To" />
+					<mx:TextInput id="upRateLim" width="40"/>
+				</mx:HBox>
+			</mx:FormItem>
+			<mx:FormItem label="Brand">
+				<mx:TextInput id="brand" />
+			</mx:FormItem>
+			<mx:FormItem label="Store">
+				<mx:TextInput id="store" />
+			</mx:FormItem>
+			<mx:FormItem label="Color">
+				<mx:ColorPicker id="pColor" />  // use dataProvider for narrower range of colors 
+			</mx:FormItem>
+			<mx:FormItem label="Comment">
+				<mx:CheckBox id="pComment" />
+			</mx:FormItem>
+			<mx:FormItem label="">
+				<mx:Button id="rSearch" label="Search" />
+			</mx:FormItem>
+		</mx:Form>
+	</mx:VBox>	-->
+</mx:VBox>
