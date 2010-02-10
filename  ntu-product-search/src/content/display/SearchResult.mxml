@@ -1,9 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" themeColor="haloSilver" 
-		  
-	horizontalScrollPolicy="off" verticalScrollPolicy="off"  verticalAlign="center" horizontalAlign="center">
+	xmlns:controls="com.asfusion.controls.*"	  
+	xmlns:rating="com.Rating*"
+	horizontalScrollPolicy="off" verticalScrollPolicy="off"  verticalAlign="center" horizontalAlign="center" xmlns:Rating="com.Rating.*">
+	<mx:Style>
+		.rating {
+			overSkin: Embed(source='images/goldStar.png');
+			upSkin: Embed(source='images/goldStar.png');
+			unselectedSkin: Embed(source='images/greyStar.png');
+			selectedSkin: Embed(source='images/redStar.png');
+			horizontalGap: 0;
+		}
+	</mx:Style>
+	<mx:Metadata>
+		[Event(name="rating", type="controller.events.RaingEvent")]
+	</mx:Metadata>
+	
 	<mx:Script>
 		<![CDATA[
+			
 			import controller.events.FavouriteEvent;
 			import mx.containers.Box;
 			import content.ContentBox;
@@ -24,6 +39,7 @@
 			import mx.managers.DragManager;
 			import mx.core.*;
 
+		
 			private var userFavourite:ArrayCollection = new ArrayCollection();
 			[Bindable]
 			private var results:ArrayCollection = new ArrayCollection();
@@ -68,8 +84,7 @@
 			}
 			public function itemClickHandler(evt:MenuEvent):void{
 				if(evt.type == MenuEvent.ITEM_CLICK){				
-				 	if(evt.label=="Grid View"){
-						
+				 	if(evt.label=="Grid View"){						
 				 		shopWindow.selectedIndex = 0;	
 				 	}
 				 	else if(evt.label=="List View"){
@@ -103,9 +118,9 @@
 			    productWindow.anOtherCopyOfProductsList = _productsList;
 			    /*-----------------------------------------------------------------------------*/
 			    var imgs:ArrayCollection = new ArrayCollection();
-				imgs.addItemAt("C:/ProductSearch/images/"+Curdata.primaryImage,0);
+				imgs.addItemAt("p_images/"+Curdata.primaryImage,0);
 				for(var i:uint =0 ; i< Curdata.variantImage.length(); i++)
-					imgs.addItem("C:/ProductSearch/images/"+Curdata.variantImage[i]);
+					imgs.addItem("p_images/"+Curdata.variantImage[i]);
 				//imgs.push(data.primaryImage);
 				productWindow.images = imgs;
 				/*-----------------------------------------------------------------------------*/
@@ -148,8 +163,6 @@
 			private function close(e:CloseEvent):void{
 				PopUpManager.removePopUp(ProductZoom(e.currentTarget));
 			}
-			
-			
 		]]>
 	</mx:Script>
 	<mx:Label width="100%" styleName="status" id="statusBar"/>
@@ -162,13 +175,16 @@
 				<mx:TileList id="gridResult" width="100%" height="100%"  dataProvider="{results}" 
 				verticalScrollPolicy="on" toolTip="drag to left panel for visual search"  
 				styleName="mainView" rowHeight="150" columnWidth="150"
-				itemRollOver="setIndex(event)" itemRollOut="unsetIndex(event)">
+				itemRollOver="setIndex(event)" itemRollOut="unsetIndex(event)"
+				allowMultipleSelection="true">
 					<mx:itemRenderer>
 						<mx:Component>							
 							<mx:VBox horizontalScrollPolicy="off" horizontalAlign="center" verticalScrollPolicy="off" 
 			                	width="100%" height="100%" mouseOver="set_Visible(event)" mouseOut="unset_Visible(event)">
 			                    <mx:Script>
 			                		<![CDATA[
+			                			import controller.ResultLoader;
+			                			import mx.controls.Alert;
 			                			import mx.effects.*;
 										import mx.effects.effectClasses.*;
 										import mx.events.*;
@@ -178,6 +194,7 @@
 										import mx.managers.DragManager;
 										import mx.managers.PopUpManager;
 										import mx.events.CloseEvent;
+										import controller.events.RatingEvent;
 										
 										[Embed(source="/images/star.png")]
 										
@@ -217,7 +234,7 @@
 												rate = 0;
 											else
 											rate = Number(rateData);
-											rateBox.removeAllChildren();	
+											//rateBox.removeAllChildren();	
 											//---------------------------------
 											for(var i:uint = 1; i<=5; i++){
 												var img:Image = new Image();
@@ -235,8 +252,20 @@
 													img.source = greyStar;
 												}
 												
-												rateBox.addChild(img);
+												//rateBox.addChild(img);
 											}
+										}
+										private function parseRating1(rateData:String):void{
+											var rate:Number; 
+											rateBox1.value = 0;
+											rateBox1.validateNow();
+											if(rateData == "" ||rateData == null)
+												rate = 0;
+											else
+												rate = Number(rateData);
+											rateBox1.invalidateProperties();
+											rateBox1.value = rate;
+											rateBox1.validateNow();
 										}
 										
 										private function set_Visible(event:MouseEvent):void{
@@ -254,8 +283,16 @@
 										        zoomAll.play([event.currentTarget], event.type == MouseEvent.MOUSE_OUT ? true : false); 
 										    } 
 										} 
+										private function doRating(product_id:String, event:MouseEvent){																													
+											var params:URLVariables = new URLVariables("option=doRating&product_id="+product_id
+												+"&rating="+event.currentTarget.selectedValue);
+											var loader:ResultLoader = new ResultLoader();
+											loader.load("PSInterface/ratingController.php",params);
+											//mx.controls.Alert.show(product_id + " " +event.currentTarget.selectedValue);
+										}
 			                		]]>
 			                	</mx:Script>
+			                	
 								<mx:Zoom duration="300"  originX="0" originY="0" relevantProperties="true" id="zoomAll" 
 										zoomWidthTo="2" zoomHeightTo="2" zoomWidthFrom="1" zoomHeightFrom="1"  /> 
 								
@@ -268,13 +305,16 @@
 										click="outerDocument.showProductZoom(data);"/>	
 							
 								</mx:HBox>
-								<mx:Image source="C:/ProductSearch/images/{data.primaryImage}" id="itemImage" 
+								<mx:Image source="p_images/{data.primaryImage}" id="itemImage" 
 									width="{outerDocument.itemImageSizeGridResult}" 
 									height="{outerDocument.itemImageSizeGridResult}" 
 									mouseMove="startDragHandler(event)" 
 									mouseOver="doZoom(event)" mouseOut="doZoom(event)"/>
 								<mx:Label text="{data.name}" width="120" textAlign="left"/>
-								<mx:HBox id="rateBox"  creationComplete="parseRating(data.avg_rating)"  />
+								<!--<mx:HBox id="rateBox"  creationComplete="parseRating(data.avg_rating)"  />-->
+								<controls:Rating id="rateBox1" value="{data.avg_rating}"
+									styleName="rating" click="doRating(data.product_id, event);" 
+									showSelectedValue="true"/>								
 							</mx:VBox>
 						</mx:Component>				
 					</mx:itemRenderer>
@@ -308,6 +348,7 @@
 									import mx.effects.effectClasses.*;
 									import mx.events.*;
 									import mx.core.*;
+									import controller.ResultLoader;
 									public var resizeInst:ResizeInstance;
 									
 									[Embed(source="/images/star.png")]
@@ -340,36 +381,9 @@
 										else
 											format += "-$"+p2;					
 										return format;
-										}
-								
-									private function parseRating(rateData:String):void{
-										var rate:Number; 
-										if(rateData == "" ||rateData == null)
-											rate = 0;
-										else
-											rate = Number(rateData);
-										rateBox.removeAllChildren();	
-										//---------------------------------
-										for(var i:uint = 1; i<=5; i++){
-											var img:Image = new Image();
-											img.width = 10;
-											img.height = 10;
-											img.alpha = 0.7;
-											if(Number(i) <= rate){
-												img.source = star;
-											}
-											else if((Number(i)-0.25)>rate && (Number(i-1)+0.25) < rate){
-												img.source = halfStar;					
-											}
-										
-										
-											else if(Number(i) > rate){
-												img.source = greyStar;
-											}
-											
-											rateBox.addChild(img);
-										}
 									}
+								
+									
 								
 									private function startDragHandler(e:MouseEvent):void{
 										var dragInitiator:Image = Image(e.currentTarget);
@@ -402,7 +416,13 @@
 										else
 											r.play([event.currentTarget],event.type==MouseEvent.MOUSE_OUT);
 									}
-								
+									private function doRating(product_id:String, event:MouseEvent){																													
+										var params:URLVariables = new URLVariables("option=doRating&product_id="+product_id
+											+"&rating="+event.currentTarget.selectedValue);
+										var loader:ResultLoader = new ResultLoader();
+										loader.load("PSInterface/ratingController.php",params);
+										//mx.controls.Alert.show(product_id + " " +event.currentTarget.selectedValue);
+									}
 								]]>
 								</mx:Script>
 								   <mx:Resize id="r" heightTo="200" heightFrom="{outerDocument.itemImageSizeListResult}" 
@@ -417,7 +437,7 @@
 											click="outerDocument.showProductZoom(data);"/>								
 									</mx:HBox>
 									<mx:HBox>
-										<mx:Image source="C:/ProductSearch/images/{data.primaryImage}" 
+										<mx:Image source="p_images/{data.primaryImage}" 
 										width="{outerDocument.itemImageSizeListResult}" 
 										height="{outerDocument.itemImageSizeListResult}" 
 										mouseMove="startDragHandler(event)" mouseOver="handleMouse(event)" 
@@ -425,7 +445,8 @@
 										<mx:VBox verticalGap="0">										
 											<mx:Label text="{data.name}" fontWeight="bold" />
 											<mx:Label text="{parsePrice(data.minRetail, data.maxRetail)}" color="#990000" fontWeight="bold"/>
-											<mx:HBox id="rateBox" />
+											<controls:Rating id="rateBox" value="{data.avg_rating}" showSelectedValue="true"
+												styleName="rating" click="doRating(data.product_id, event);" />	
 											<mx:Label text="Merchant: {data.merchant}" />
 											<mx:Text  htmlText="{truncate(data.description)}" width="600" truncateToFit="true"/>
 											<mx:ButtonBar dataProvider="{functions}" itemClick="itemClickHandler(event)"/>

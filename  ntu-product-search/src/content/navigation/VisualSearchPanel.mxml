@@ -9,28 +9,182 @@
             import flash.events.*;
             import flash.net.*;
             import mx.controls.sliderClasses.Slider;
-           
+            import mx.rpc.events.FaultEvent;
+            
+            import mx.collections.ArrayCollection;
+            
 			[Bindable]
 			public var product:Object;
-			
-	
+			[Bindable]
+			public var categoriesDropDown:ArrayCollection;
+			[Bindable]
+			public var details:Object;
+			[Bindable]
+			public var currentImgId: uint;			
+			[Bindable]
+			public var images:ArrayCollection;
+			[Bindable]
+			public var favourites:ArrayCollection = new ArrayCollection();
 			
 			private function ColorChange(e:ColorPickerEvent):void{
 				
 				Alert.show(e.color + " is pressed");
 			}
-		
-			
+			public function clear(e:MouseEvent):void
+	        {
+	           url.text="";
+	        }
+	        public function handleFault(event:FaultEvent):void
+	        {
+	           Alert.show("Error "+event.fault.faultString+" : Upload Not Successful");
+	        }
+			public function switchImage(curData:Object){
+				pImage.source = curData.toString();
+			}
+			private function parsePrice(p1:String, p2:String):String{
+				var format:String = "";
+				if(p1.indexOf("-1") > -1 || p1 == "" || p1 ==  null)
+					format += "N/A";
+				else
+					format += "$"+p1;
+					
+				if(p2.indexOf("-1") > -1 || p2 == "" || p2 ==  null)
+					format += "-N/A";
+				else
+					format += "-$"+p2;					
+				return format;
+			}
+			private function doAddFav():void{
+				if(!checkDuplucateInCart(details.asin, favourites)){
+					var obj:Object = new Object();
+					obj["pName"] = details.name;
+					obj["pPrice"] = parsePrice(details.minRetail, details.maxRetail);
+					obj["pAdd"] = details.url;
+					obj["pAsin"] = details.asin;
+					favourites.addItem(obj);
+				}else{
+					Alert.show("Item already added");
+				}				
+				
+			}
+			private function checkDuplucateInCart(asin:String, list:ArrayCollection):Boolean{
+				var duplicate:Boolean = false;
+				for(var i:int = 0; i< list.length; i++){
+					if(list.getItemAt(i).pAsin == asin){
+						duplicate = true;
+						break;
+					}
+				}
+				return duplicate;			
+			}			
 		]]>
 	</mx:Script>
-	<mx:Canvas width="220" height="213">
-		<mx:Image  source="C:/ProductSearch/images/{product.primaryImage}" width="100%"
-			 height="100%" horizontalAlign="center" completeEffect="Fade"/>
-	</mx:Canvas>
-	<mx:Button label="search" id="searchVisual" />
-	<mx:Spacer height="12"/>
-	<mx:Label text="Choose a color"/>
-	<mx:ColorPicker id="ColorPick" visible="true"  width="128" height="42"/>
-	<mx:HRule width="286" height="2"/>
+	<mx:VBox width="50%" height="100" toolTip="Drag image here for Visual Search" 
+		horizontalCenter="true" horizontalAlign="center"
+		borderColor="#000000" borderThickness="1" borderStyle="solid">
+		<mx:Image width="100%" id="vsImageQuery"
+			 height="100%" horizontalAlign="center" completeEffect="Fade" />
+	</mx:VBox>
+	<!-- <mx:Button label="Search" id="vsButton" /> -->
 	
+	<mx:TextInput id="url"  width="100%" text="Pls Enter URL or Select an image" click="clear(event)"/>
+		
+	<mx:HBox width="100%" horizontalAlign="center">
+		<mx:ComboBox id="upcateSelect"   width="30%" styleName="comboBox" labelField="@label" 
+			dropDownStyleName="popUp" dataProvider="{categoriesDropDown}" rowCount="{categoriesDropDown.length}"/>
+		<mx:Button label="Image Upload" id="imageUploadButton"/>
+		<mx:Button label="URL Upload" id="urlUploadButton"/>
+	</mx:HBox>
+	
+	<mx:HTTPService id="urlMethod"  fault="handleFault(event);"  resultFormat="e4x"
+	    url="PSInterface/uploadUrl.php" useProxy="false">
+	    <mx:request xmlns="">
+	        <url>{url.text}</url>
+	    </mx:request>
+	</mx:HTTPService>
+	<mx:HRule width="100%" height="1"/>
+	<mx:VBox label="Product Details" styleName="details" verticalScrollPolicy="auto" 
+		horizontalScrollPolicy="off" 
+		width="100%" horizontalAlign="left" 
+		verticalScrollBarStyleName="myVScrollBar" height="100%">
+		<!--<mx:VBox  horizontalAlign="center" width="100%" verticalAlign="middle" paddingLeft="0" paddingRight="0"  > 		
+			<mx:Image id="pImage" source="{images.getItemAt(0)}" width="220" height="250" 
+				completeEffect="Fade" horizontalAlign="center"/>
+			<mx:HBox width="240" horizontalAlign="center" >
+				<mx:Button id="nextImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/prev.png')" alpha="0.5"/>
+				<mx:Button id="prevImg"  buttonDown="changeImage(event);" icon="@Embed(source='/images/next.png')" alpha="0.5"/>
+			</mx:HBox>
+		</mx:VBox>	-->
+		<mx:HBox horizontalAlign="center" width="100%">
+			<mx:List dataProvider="{images}" width="20%" height="200" borderThickness="0">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Image source="{data}" click="outerDocument.switchImage(data);" height="50" width="100%"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:List>
+			<mx:Image id="pImage" source="{images.getItemAt(0)}" width="80%" height="200" 
+				completeEffect="Fade" horizontalAlign="center"/>
+			<!--<mx:TileList dataProvider="{images}" height="50" horizontalCenter="true" borderThickness="0">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:Image source="{data}" click="outerDocument.switchImage(data);" height="100%" width="50"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:TileList>-->
+		</mx:HBox>		
+		<mx:Grid id="aProduct" horizontalGap="0" verticalGap="0" width="100%" height="100%">
+		<mx:GridRow >
+			<mx:GridItem>
+				<mx:Label text="{details.name}" width="320" fontWeight="bold" />
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow >
+			<mx:GridItem  styleName="pField">
+				<mx:Label text="Description:" styleName="pField" />
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow width="100%">
+			<mx:GridItem colSpan="2" textAlign="left" >
+				<mx:Text id="pDescrip" htmlText="{details.description}" width="320"/>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow >
+			<mx:GridItem  colSpan="2" width="100%">
+			<mx:HBox width="100%">
+				<mx:Label text="Price: " styleName="pField" />
+				<mx:Label text="{parsePrice(details.minRetail, details.maxRetail)}" />
+			</mx:HBox>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow >
+			<mx:GridItem  colSpan="2" width="100%">
+			<mx:HBox width="100%">
+				<mx:Label text="Average Rating: " styleName="pField" />
+				<mx:Label text="{details.avg_rating}" />
+			</mx:HBox>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem width="100%" height="100%"  colSpan="2">
+				<mx:HBox width="100%">
+				<mx:Label text="Merchant:" styleName="pField"/>
+				<mx:Label id="Merchant" text="Amazon" />
+				</mx:HBox>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow width="245" height="100%">
+			<mx:GridItem width="100%" height="100%"  colSpan="2">
+			<mx:HBox width="100%">
+				<mx:Label text="Product ID:" styleName="pField"/> 
+				<mx:Label id="pID" text="{details.asin}" />
+			</mx:HBox>
+			</mx:GridItem>		
+		</mx:GridRow>
+		</mx:Grid>
+		
+		<mx:ControlBar themeColor="haloSilver" height="5%" paddingTop="0" paddingBottom="0" paddingLeft="0">
+			<mx:LinkButton id="addFavourite" label="Add to Favourite" click="doAddFav();"/>				
+		</mx:ControlBar> 
+	</mx:VBox>
 </mx:VBox>

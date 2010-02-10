@@ -1,10 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" height="80" width="100%" 
-	verticalAlign="bottom" verticalGap="2" >
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:hc="com.hillelcoren.components.*"
+	xmlns:classes="com.hillelcoren.components.autoComplete.classes.*"
+	xmlns:local="header.*"
+	height="80" width="100%" 
+	verticalAlign="bottom" verticalGap="2" initialize="init()">
 	
 	<mx:Style>
+	AutoComplete
+	{
+		selected-item-style-name: macMail;
+	}
+	
+	.none 
+	{
+		over-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		up-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		down-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-over-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-up-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-down-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		padding-top: 0;
+		padding-bottom: 0;
+		padding-left: 0;
+		padding-right: 0;
+		font-weight: normal;
+		selected-font-weight: bold;
+		show-comma: no;
+	}
+	  
+	.underline
+	{
+		over-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		up-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		down-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-over-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-up-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-down-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		padding-top: 0;
+		padding-bottom: 0;
+		padding-left: 0;
+		padding-right: 0;
+		text-decoration: underline;
+		font-weight: normal;
+		selected-font-weight: bold;
+		show-comma: yes;
+	}
+	  
+	.macMail 
+	{
+		over-skin: ClassReference("com.hillelcoren.assets.skins.MacMailSkin");
+		up-skin: ClassReference("com.hillelcoren.assets.skins.MacMailSkin");
+		down-skin: ClassReference("com.hillelcoren.assets.skins.MacMailSkin");
+		selected-over-skin : ClassReference("com.hillelcoren.assets.skins.MacMailSkin");
+		selected-up-skin: ClassReference("com.hillelcoren.assets.skins.MacMailSkin");
+		selected-down-skin : ClassReference("com.hillelcoren.assets.skins.MacMailSkin");
+		padding-top: 0;
+		padding-bottom: 0;
+		text-selected-color: #FFFFFF;
+		padding-left: 8;
+		padding-right: 8;
+		font-weight: normal; 
+	}
+	
+	.facebook 
+	{
+		over-skin: ClassReference("com.hillelcoren.assets.skins.FacebookSkin");
+		up-skin: ClassReference("com.hillelcoren.assets.skins.FacebookSkin");
+		down-skin: ClassReference("com.hillelcoren.assets.skins.FacebookSkin");
+		selected-over-skin : ClassReference("com.hillelcoren.assets.skins.FacebookSkin");
+		selected-up-skin : ClassReference("com.hillelcoren.assets.skins.FacebookSkin");
+		selected-down-skin : ClassReference("com.hillelcoren.assets.skins.FacebookSkin");        
+		padding-top: 0;
+		padding-bottom: 0;
+		text-selected-color: #FFFFFF;
+		padding-left: 2;
+		padding-right: 5;
+		font-weight: normal;                
+	}
+	
+	.actionsMenuButton
+	{
+		over-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		up-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		down-skin: ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-over-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-up-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		selected-down-skin : ClassReference("com.hillelcoren.assets.skins.BlankSkin");
+		padding-top: 0;
+		padding-bottom: 0;
+		padding-left: 0;
+		padding-right: 4;			
+	}
 	.popUp{
 		letter-spacing: 0;
 		color: white;
@@ -14,8 +103,7 @@
 		background-color: black;
 		theme-color: black;
 		border-style:none;
-		border-alpha: 0.5;
-		
+		border-alpha: 0.5;	
 	}
 	.menu{
 		background-alpha: 0.5;
@@ -53,18 +141,166 @@
         <state abbrev="CO" label="Colorado" />
         <state abbrev="CT" label="Connecticut" />
     </mx:XMLList>
-	
+    <mx:Metadata>
+    	[Event(name=TextSearchEvent.TEXTCHANGE, type="controller.events.TextSearchEvent")]
+    </mx:Metadata>
+	<mx:Script>
+		<![CDATA[
+			
+			import controller.events.TextSearchEvent;
+			import mx.controls.Alert;import mx.utils.ObjectUtil;
+			import mx.events.MenuEvent;
+			import com.hillelcoren.components.AutoComplete;
+			import mx.core.Application;
+			import mx.core.UIComponent;
+			import mx.collections.ArrayCollection;
+			import mx.rpc.events.ResultEvent;
+		    import mx.rpc.events.FaultEvent;
+			
+			[Bindable]
+			public var autoCompleteKeyword:ArrayCollection = new ArrayCollection();
+			[Bindable]
+			public var categoriesDropDown:ArrayCollection;
+			private function init():void
+			{
+				/*autoCompleteKeyword = new ArrayCollection(
+				[
+					{ "name":"Addidas", "hex":"100" },	
+					{ "name":"Addidas Shoes", "hex":"80" },
+					{ "name":"Baby", "hex":"500" },		
+					{ "name":"Baby Dress", "hex":"500" },
+					{ "name":"Baby Pant", "hex":"500" },			
+					{ "name":"Baby Shirt", "hex":"500" },		
+					{ "name":"Bikini", "hex":"500" },
+					{ "name":"Boy", "hex":"500" },
+					{ "name":"Bra", "hex":"500" },
+					{ "name":"Car", "hex":"500" },	
+					{ "name":"Car Wheel", "hex":"500" },				
+					{ "name":"Cotton", "hex":"500" },					
+					{ "name":"Dress", "hex":"500" },					
+					{ "name":"Eggplant", "hex":"500" },
+					{ "name":"Electric Lime", "hex":"500" },
+					{ "name":"Female", "hex":"500" },				
+					{ "name":"Girls", "hex":"500" },
+					{ "name":"Glasses", "hex":"500" },
+					{ "name":"Happy Ever After", "hex":"500" },
+					{ "name":"Hot Magenta", "hex":"500" },
+					{ "name":"Inch Worm", "hex":"500" },
+					{ "name":"Indian Red", "hex":"500" },
+					{ "name":"Indigo", "hex":"500" },
+					{ "name":"Jeans", "hex":"500" },
+					{ "name":"Jeans for men", "hex":"500" },
+					{ "name":"Jeans for women", "hex":"500" },
+					{ "name":"Jeans that fit", "hex":"500" },									
+					{ "name":"Laptop", "hex":"500" },
+					{ "name":"Lipstick", "hex":"500" },	
+					{ "name":"Luggage", "hex":"500" },				
+					{ "name":"Mini Skirt", "hex":"500" },
+					{ "name":"Mini Zip", "hex":"500" },					
+					{ "name":"Nike", "hex":"500" },
+					{ "name":"Nike Shirt", "hex":"500" },
+					{ "name":"Nike Shoes", "hex":"500" },
+					{ "name":"Nike Shoes Men", "hex":"500" },
+					{ "name":"Nike Shoes Women", "hex":"500" },
+					{ "name":"Overcoat Green", "hex":"500" },					
+					{ "name":"Pant", "hex":"500" },
+					{ "name":"Pant for men", "hex":"500" },
+					{ "name":"Pant for women", "hex":"500" },	
+					{ "name":"Rain Coat", "hex":"500" },								
+					{ "name":"Rolex", "hex":"500" },
+					{ "name":"Sandal", "hex":"500" },					
+					{ "name":"Shirt", "hex":"500" },
+					{ "name":"Skirt", "hex":"500" },
+					{ "name":"Slipper", "hex":"500" },
+					{ "name":"Socks", "hex":"500" },
+					{ "name":"Swimsuit", "hex":"500" },
+					{ "name":"Suit", "hex":"500" },		
+					{ "name":"Sun Glasses", "hex":"500" },			
+					{ "name":"T-Shirt", "hex":"500" },					
+					{ "name":"Umbrella", "hex":"500" },	
+					{ "name":"Underpant", "hex":"500" },	
+					{ "name":"Underpant men", "hex":"500" },	
+					{ "name":"Underpant toddler", "hex":"500" },	
+					{ "name":"Underpant women", "hex":"500" },					
+					{ "name":"Vest", "hex":"500" },
+					{ "name":"Watches", "hex":"500" },					
+					{ "name":"Zip", "hex":"500" }
+				] );		*/												
+			}	
+			
+			/*private function dispatchTextChangeEvent():void{				
+				var textSearchEvent:TextSearchEvent = 
+					new TextSearchEvent(TextSearchEvent.TEXTCHANGE, query.text);
+					query.dispatchEvent(textSearchEvent);
+			}*/
+			
+			private function handleAutoCompleteChange():void
+			{	
+				//var color:Object = autoComplete.text;
+				var textSearchEvent:TextSearchEvent = 
+					new TextSearchEvent(TextSearchEvent.TEXTCHANGE, autoCompleteQuery.text);
+					autoCompleteQuery.dispatchEvent(textSearchEvent);
+				
+				//if (color != null && color.hasOwnProperty( "hex" ))
+				//{
+				//	Application.application.setStyle( "backgroundColor", color.hex );
+				//}				
+			}
+			public function clear(e:MouseEvent):void
+	        {
+	           urlImageUploadText.text="";
+	        } 
+	        public function handleFault(event:FaultEvent):void
+	        {
+	           Alert.show("Error "+event.fault.faultString+" : Upload Not Successful");
+	        }			
+		]]>
+	</mx:Script>
+	<mx:Component id="dropDownItemRenderer">
+		<local:ColorItemRenderer selectedItems="{ outerDocument.autoCompleteQuery.selectedItems }" />
+	</mx:Component>
 	<mx:HBox width="100%" horizontalAlign="left" paddingRight="20" verticalAlign="bottom">
-		<mx:Image source="@Embed(source='/images/PSlogo.png')" maintainAspectRatio="true" height="50" x="10"  width="30%"/>
-		<mx:HBox width="70%" horizontalAlign="right">
-			<mx:Button label="Search" id="searchBut" styleName="myBut" width="10%"/>	
-			<mx:TextInput id="query" width="70%" toolTip="Search for"/>
-			<mx:ComboBox id="cateSelect"  width="20%" 
-				toolTip="Choose your category" styleName="comboBox"  
-				labelField="@label" 				
-				dropdownStyleName="popUp"/>
-		</mx:HBox>
+		<mx:Image source="@Embed(source='/images/PSlogo.png')" maintainAspectRatio="true" 
+			height="50" x="10"  width="40%"/>
+		<mx:ComboBox id="cateSelect"  width="20%" rowCount="{categoriesDropDown.length}"
+					toolTip="Choose your category" styleName="comboBox"  
+					labelField="@label" dropdownStyleName="popUp"/>	
+		<mx:TabNavigator width="60%" backgroundColor="#DAD8D8" id="searchOptionTab"
+		themeColor="haloSilver" borderStyle="none" height="56">
+			
+			<mx:HBox label="Text Search" width="100%" horizontalAlign="right">
+				
+				<hc:AutoComplete id="autoCompleteQuery" dataProvider="{ autoCompleteKeyword }" 
+					labelField="name" matchType="anyPart" 
+				prompt="Type in your search" width="95%" change="{ handleAutoCompleteChange() }" searchChange="{ handleAutoCompleteChange() }"
+				allowNewValues="true" selectedItemStyleName="none" backspaceAction="focus" 
+				allowDuplicates="false" allowMultipleSelection="false" autoSelectEnabled="false"
+				allowEditingNewValues="true" dropDownItemRenderer="{ dropDownItemRenderer }"/>				
+				<!--<mx:TextInput id="query" width="72%" toolTip="Search for" change="dispatchTextChangeEvent();"/>-->
+				<mx:Image source="@Embed(source='/images/search_icon.png')" id="goButton"
+					maintainAspectRatio="true" height="30" width="5%"/>
+			</mx:HBox>
+			<mx:HBox label="Local Image Upload" width="100%" horizontalAlign="right">				
+				<mx:TextInput id="imageUploadText" width="90%" text="Pls select an image..."/>
+				<mx:Button id="headerImageBrowseButton" label="Browse"/>
+				<mx:Image source="@Embed(source='/images/upload.png')" id="localFileUploadBtn"
+					maintainAspectRatio="true" height="30" width="5%"/>
+			</mx:HBox>
+			<mx:HBox label="URL Image Upload" width="100%" horizontalAlign="right">
+				<mx:TextInput id="urlImageUploadText" width="95%" text="Pls Enter URL..." click="clear(event)"/>
+				<mx:Image source="@Embed(source='/images/upload.png')" id="urlUploadBtn"
+					maintainAspectRatio="true" height="30" width="5%"/>
+			</mx:HBox>
+		</mx:TabNavigator>
+		
 	</mx:HBox>
-	
 	<mx:MenuBar width="100%" labelField="@label" id="menu"  styleName="menu" menuStyleName="popUp"/>
+	<mx:HTTPService id="headerUrlMethod"  fault="handleFault(event);"  resultFormat="e4x"
+	    url="PSInterface/uploadUrl.php" useProxy="false">
+	    <mx:request xmlns="">
+	        <url>{urlImageUploadText.text}</url>
+	    </mx:request>
+	</mx:HTTPService>
+	<!--<mx:Button id="firstReq"  label="First"/>
+	<mx:Button id="secReq"  label="Second"/>-->
 </mx:VBox>

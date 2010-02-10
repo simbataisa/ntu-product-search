@@ -15,6 +15,14 @@
 	<mx:Script source="controller/BodyController.as" />
 	<mx:Script>
 		<![CDATA[
+			import mx.events.IndexChangedEvent;
+			import controller.events.USSearchResultEvent;
+			import controller.events.ColorSearchResultEvent;
+			import mx.events.ColorPickerEvent;
+			import controller.events.PDoubleClickEvent;
+			import mx.events.SliderEvent;
+			import controller.events.AutoSuggestionEvent;
+			import controller.events.TextSearchEvent;
 			import controller.events.FavouriteEvent;
 			import controller.events.IOLoadEvent;
 			import controller.events.MessageEvent;
@@ -59,8 +67,15 @@
 				/*Adding handlers to components*/
 				loader.addEventListener(MessageEvent.MESSAGE, messageHandler);				
 				loader.addEventListener(SearchResultEvent.SEARCHRESULT, searchResultHandler);
-				loader.addEventListener(IOLoadEvent.ERROR,loadErrorHandler)
+				loader.addEventListener(VSSearchResultEvent.VSSEARCHRESULT, vsSearchResultHandler);
+				loader.addEventListener(USSearchResultEvent.USSEARCHRESULT, usSearchResultHandler);
+				loader.addEventListener(ColorSearchResultEvent.CSEARCHRESULT, csSearchResultHandler);
 				
+				loader.addEventListener(IOLoadEvent.ERROR,loadErrorHandler);
+				loader.addEventListener(AutoSuggestionEvent.AUTOSUGGESTION, searchSuggestionResultHandler);
+				
+				headerBox.autoCompleteQuery.loader.addEventListener(AutoSuggestionEvent.AUTOSUGGESTION, searchSuggestionResultHandler);
+				//headerBox.autoCompleteQuery.loader.addEventListener(KeywordGenerationEvent.KEYWORDGENERATION, keywordGenHandler);
 				/* retrieving all needed categories and populate data for 
 				 * menu and cateSelect of headerBox
 				 */
@@ -79,9 +94,17 @@
 				
 				/*Adding handlers to components*/
 				//Header part
-				headerBox.menu.addEventListener(MenuEvent.ITEM_CLICK, categorySelected);				
-				headerBox.searchBut.addEventListener(FlexEvent.BUTTON_DOWN, searchHandler);
-				headerBox.query.addEventListener(FlexEvent.ENTER, searchHandler);
+				headerBox.menu.addEventListener(MenuEvent.ITEM_CLICK, categorySelected);	
+				headerBox.goButton.addEventListener(MouseEvent.CLICK, goBtnClickHandler);			
+				//headerBox.searchBut.addEventListener(FlexEvent.BUTTON_DOWN, searchHandler);
+				//headerBox.query.addEventListener(FlexEvent.ENTER, searchHandler);
+				//headerBox.query.addEventListener(TextSearchEvent.TEXTCHANGE, searchSuggestionHandler);
+				headerBox.autoCompleteQuery.addEventListener(FlexEvent.ENTER, searchHandler);
+				headerBox.autoCompleteQuery.addEventListener(TextSearchEvent.TEXTCHANGE, searchSuggestionHandler);
+				headerBox.searchOptionTab.addEventListener(IndexChangedEvent.CHANGE, searchOptionTabChangeHandler);
+				//headerBox.headerImageBrowseButton.addEventListener(FlexEvent.BUTTON_DOWN, headerImageBrowseButtonHandler);
+				//headerBox.firstReq.addEventListener(FlexEvent.BUTTON_DOWN, firstHandler);
+				//headerBox.secReq.addEventListener(FlexEvent.BUTTON_DOWN, secHandler);
 				
 				//Body part
 				welcomePage.photoList.dataProvider = _products;
@@ -91,15 +114,39 @@
 				contenBoxHandler();	
 			}									
 			
+			private function firstHandler(event:FlexEvent):void{
+				Alert.show("hello");
+				var params:URLVariables = new URLVariables("action=vsDragDrop");				
+				//loader.load("/AWSJavaCrawler/socketHandler.htm",params);
+				loader.load("http://localhost:8080/AWSJavaCrawler/socketHandler.htm",params);
+			}
+			private function secHandler(event:FlexEvent):void{
+				var params:URLVariables = new URLVariables("action=getPreviousSession");
+				//loader.load("/AWSJavaCrawler/productSearch.htm",params);
+				loader.load("/AWSJavaCrawler/socketHandler.htm",params);
+			}
+			
 			private function contenBoxHandler():void{			
-	
-			    contentBox.leftPanel.addEventListener(IndexChangedEvent.CHANGE,PanelChange);	
-			    //contentBox.leftPanel.textSearch.addEventListener(IndexChangedEvent.CHANGE,indexChangeHandler)
 				
-			    
+				//welcomePage.mainImage.addEventListener(MouseEvent.DOUBLE_CLICK, mainImageDoubleClickHandler);
+				welcomePage.mainImage.addEventListener(PDoubleClickEvent.PDOUBLECLICK, mainImageDoubleClickHandler);			    
+				//contentBox.leftPanel.tabNavi.addEventListener(IndexChangedEvent.CHANGE,panelChangeHandler);	
+				//contentBox.leftPanel.textSearch.addEventListener(IndexChangedEvent.CHANGE,indexChangeHandler)
+			    /*--------------------- Upload Event Handler ------------------------------*/
+			    //contentBox.leftPanel.UploadSearch.imageUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);		
+				//contentBox.leftPanel.UploadSearch.upcateSelect.dataProvider=categories;
+				//contentBox.leftPanel.UploadSearch.imageUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);
+				//contentBox.leftPanel.UploadSearch.urlUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,UrlUpload);
+				//contentBox.leftPanel.UploadSearch.urlMethod.addEventListener(ResultEvent.RESULT,handleXML);
+				contentBox.leftPanel.visualSearch.imageUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);
+				contentBox.leftPanel.visualSearch.urlUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,vsUrlImageUploadHandler);
+				contentBox.leftPanel.visualSearch.urlMethod.addEventListener(ResultEvent.RESULT,vsUrlImageUploadXMLHandler);
+				/*--------------------- VS Button Event Handler ------------------------------*/
+				//contentBox.leftPanel.visualSearch.vsButton.addEventListener(FlexEvent.BUTTON_DOWN, vsButtonHandler);
 			    /*--------------------- Drag & Drop Event Handler ------------------------------*/
 			    contentBox.leftPanel.visualSearch.addEventListener(DragEvent.DRAG_ENTER, visualSearchDragEnterHandler);
 	    		contentBox.leftPanel.visualSearch.addEventListener(DragEvent.DRAG_DROP, visualSearchDragDropHandler);
+	    		
 	   			//contentBox.leftPanel.textSearch.addEventListener(DragEvent.DRAG_ENTER, dragEnterTextHandler);
 	    		//contentBox.leftPanel.textSearch.addEventListener(DragEvent.DRAG_DROP, dragDropTextHandler);
 			    contentBox.leftPanel.Cart.addEventListener(DragEvent.DRAG_ENTER, cartDragEnterTextHandler);
@@ -109,6 +156,7 @@
 				contentBox.mainDisplay.searchResults.listResult.addEventListener(MouseEvent.CLICK,itemClickHandler);	
 				//contentBox.mainDisplay.searchResults.shopWindow.addEventListener(IndexChangedEvent.CHANGE,viewChangeHandler);
 				
+				/*--------------------- Controller Bar Event Handler ------------------------------*/
 				contentBox.mainDisplay.nextPage.addEventListener(FlexEvent.BUTTON_DOWN, pageHandler);
 				contentBox.mainDisplay.page.addEventListener(FlexEvent.ENTER, pageHandler);
 				contentBox.mainDisplay.prevPage.addEventListener(FlexEvent.BUTTON_DOWN, pageHandler);
@@ -116,6 +164,9 @@
 				contentBox.mainDisplay.sortBut.addEventListener(MenuEvent.ITEM_CLICK, sortHandler);
 				contentBox.mainDisplay.viewOption.addEventListener(MenuEvent.ITEM_CLICK, searchResultViewHandler);
 				contentBox.mainDisplay.searchResults.statusBar.addEventListener(FavouriteEvent.FAVOURITE, addToFavouriteHandler);
+				contentBox.mainDisplay.SliderZoom.addEventListener(SliderEvent.CHANGE,sliderChangeHandler);
+				contentBox.mainDisplay.ColorPick.addEventListener(ColorPickerEvent.CHANGE,colorSet);
+				contentBox.mainDisplay.feedback.addEventListener(MouseEvent.CLICK, feedBackHandler);
 			}				
 									
 			private function welcomPageResultDisplayHandler(e:Event):void{

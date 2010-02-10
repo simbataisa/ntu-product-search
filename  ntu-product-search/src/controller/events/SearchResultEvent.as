@@ -6,6 +6,7 @@ package controller.events
 	{
 		public var xmlResult:XML;
 		public static const SEARCHRESULT:String = "searchresult";
+		
 		public function SearchResultEvent(type:String,res:XML)
 		{
 			super(type);

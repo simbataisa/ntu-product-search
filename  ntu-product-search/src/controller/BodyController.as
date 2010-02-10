@@ -1,20 +1,24 @@
 // ActionScript file
 import content.navigation.winProgress;
 
+import controller.events.ColorSearchResultEvent;
+import controller.events.PDoubleClickEvent;
+import controller.events.USSearchResultEvent;
+
+import flash.events.MouseEvent;
 import flash.net.FileReference;
 import flash.net.URLRequest;
 
 import mx.collections.ArrayCollection;
 import mx.controls.Alert;
 import mx.events.DragEvent;
+import mx.events.FlexEvent;
+import mx.events.IndexChangedEvent;
 import mx.events.MenuEvent;
+import mx.events.SliderEvent;
 import mx.managers.DragManager;
+import mx.rpc.events.ResultEvent;
 
-public var upload:XML;
-
-private var visual:Boolean=false;
-private var CustomVisual:Boolean = false;
-private var ranking:Boolean = false;
 private	var p_id:String = "";  //contentBox.leftPanel.visualSearch.product.db_id;
 private	var c_id:String =""; //contentBox.leftPanel.visualSearch.product.category;
 
@@ -25,7 +29,6 @@ private var g:String="";
 private var session:uint=0;
 
 private var fileref:FileReference = new FileReference;
-private const _strUploadScript:String = "Controller/upload.php";
 private var _winProgress:winProgress;
 
 /**
@@ -37,6 +40,60 @@ private function switchViewHandler(e:IndexChangedEvent):void{
 	else 
 		welcomePage.timer.start();		
 }
+
+private function mainImageDoubleClickHandler(e:PDoubleClickEvent):void{
+	if(mainView.selectedIndex == 0 || mainView.selectedIndex==1){
+		mainView.selectedIndex = 2;
+		contentBox.leftPanel.tabNavi.selectedIndex = 1;
+	}
+	var data:Object = e.pXML;
+	contentBox.mainDisplay.page.text = "1";	
+	if(contentBox.leftPanel.tabNavi.selectedIndex == 0 ){
+		contentBox.leftPanel.details = data;
+		contentBox.leftPanel.visualSearch.product = data ;
+		contentBox.leftPanel.validateNow();
+		var imgs:ArrayCollection = new ArrayCollection();
+		imgs.addItem(data.primaryImage);		
+		for(var i:uint = 0; i< data.variantImage.length(); i++){
+			imgs.addItem(data.variantImage[i]);
+		}
+		contentBox.leftPanel.images = imgs;
+		contentBox.leftPanel.currentImgId = 0;
+	}
+	else{
+		contentBox.leftPanel.visualSearch.product = data
+	}
+	//Alert.show("id="+data.product_id +"category="+data.category_id);
+	_query = "Visual Search";
+	_categorySearch = false;
+	visual = true;
+	customVisual=false;
+	ranking =false;
+	contentBox.mainDisplay.sortBut.enabled = false;
+	
+	/*var params:URLVariables = new URLVariables("action=vsDragDrop&product_id="+data.product_id
+		+"&category="+data.category_id+"&pageLength=" + _pageLength.toString());*/
+	var params:URLVariables = new URLVariables("option=vsDragDrop&product_id="+data.product_id
+		+"&category="+data.category_id+"&pageLength=" + _pageLength.toString()
+		+"&firstPageReq=Y&lastPage=N");
+	loader.load("PSInterface/visualSearchController.php", params);	
+	//loader.load("Controller/ConnectSocket.php", params);
+	//loader.load("/AWSJavaCrawler/socketHandler.htm", params);
+	//loader.load("http://localhost:8084/AWSJavaCrawler/socketHandler.htm", params);
+ 				
+ 			
+}
+/**
+ * 
+ **/
+/*private function panelChangeHandler(e:IndexChangedEvent):void{
+	if (e.currentTarget.selectedIndex == 1){
+		contentBox.leftPanel.visualSearch.vsButton.addEventListener(FlexEvent.BUTTON_DOWN,vsButtonhHandler);	
+	}else if (e.currentTarget.selectedIndex == 2){
+		init_upload();
+	}
+}*/
+
 //==============================FUNCTIONS WORK ON SEARCH RESULT========================================
 /**
  * This function is to handle contentBox.mainDisplay.nextPage and prevPage buttons
@@ -190,15 +247,21 @@ private function pageLengthChange(e:ListEvent):void{
 	}
 	var totalPages:uint = (Math.ceil(_products.length/_pageLength));
 	if(_pageLength==20){
-		contentBox.mainDisplay.searchResults.gridResult.rowHeight = 250;
-		contentBox.mainDisplay.searchResults.gridResult.columnWidth = 250;
-		contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 150;
-		contentBox.mainDisplay.searchResults.itemImageSizeListResult = 150;
+		var defaultZoom:Number = (Number(contentBox.mainDisplay.SliderZoom.minimum) + 
+								 Number(contentBox.mainDisplay.SliderZoom.maximum)) / 2;
+		
+		contentBox.mainDisplay.searchResults.gridResult.rowHeight = defaultZoom*5;
+		contentBox.mainDisplay.searchResults.gridResult.columnWidth = defaultZoom*5;
+		contentBox.mainDisplay.searchResults.itemImageSizeGridResult = defaultZoom*3;
+		contentBox.mainDisplay.searchResults.itemImageSizeListResult = defaultZoom*3;
+		contentBox.mainDisplay.SliderZoom.value = defaultZoom;
 	}else{
-		contentBox.mainDisplay.searchResults.gridResult.rowHeight = 150;
-		contentBox.mainDisplay.searchResults.gridResult.columnWidth = 150;
-		contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 80;
-		contentBox.mainDisplay.searchResults.itemImageSizeListResult = 100;
+		var defaultZoom:Number = Number(contentBox.mainDisplay.SliderZoom.minimum);
+		contentBox.mainDisplay.searchResults.gridResult.rowHeight = defaultZoom*5;
+		contentBox.mainDisplay.searchResults.gridResult.columnWidth = defaultZoom*5;
+		contentBox.mainDisplay.searchResults.itemImageSizeGridResult = defaultZoom*3;
+		contentBox.mainDisplay.searchResults.itemImageSizeListResult = defaultZoom*3;
+		contentBox.mainDisplay.SliderZoom.value = defaultZoom;
 	}
 	/*--------------------------------------------------------------------------*/
 	contentBox.mainDisplay.page.text= _currentPage.toString();
@@ -217,6 +280,18 @@ private function pageLengthChange(e:ListEvent):void{
 }
 
 /**
+ * This function is to handle the Zooming action 
+ * when changing value of Slider component
+ **/
+private function sliderChangeHandler(e:SliderEvent):void{
+	contentBox.mainDisplay.searchResults.gridResult.rowHeight=e.currentTarget.value* 5;
+	contentBox.mainDisplay.searchResults.gridResult.columnWidth=e.currentTarget.value * 5;
+	contentBox.mainDisplay.searchResults.listResult.rowHeight=e.currentTarget.value* 5;	
+	contentBox.mainDisplay.searchResults.itemImageSizeGridResult=e.currentTarget.value* 3;
+	contentBox.mainDisplay.searchResults.itemImageSizeListResult=e.currentTarget.value* 3;
+}
+
+/**
  * To change view between Gid and List view
  **/ 
 private function searchResultViewHandler(event:MenuEvent):void{
@@ -226,6 +301,38 @@ private function searchResultViewHandler(event:MenuEvent):void{
 	}else if(event.label == "List View"){		
 		contentBox.mainDisplay.searchResults.shopWindow.selectedIndex = 1;
 	}
+}
+
+private function feedBackHandler(e:MouseEvent):void{
+    var selectedIndicesString:String = "";
+	if(contentBox.mainDisplay.searchResults.shopWindow.selectedIndex == 0){
+		selectedIndicesString =contentBox.mainDisplay.searchResults.gridResult.selectedIndices.toString();
+	}else if(contentBox.mainDisplay.searchResults.shopWindow.selectedIndex == 1){		
+		selectedIndicesString =contentBox.mainDisplay.searchResults.listResult.selectedIndices.toString();
+	}
+	if(selectedIndicesString.length > 0){
+		var selectedIndices:Array = selectedIndicesString.split(",");
+		var params:URLVariables = new URLVariables("option=refineSearchResult"
+			+"&product_id="+_productsPerPage[selectedIndices[0]].product_id
+			+"&category="+_productsPerPage[selectedIndices[0]].category_id+"&pageLength=" + _pageLength.toString()
+			+"&firstPageReq=Y&lastPage=N");
+		if(visual){			
+			loader.load("PSInterface/visualSearchController.php", params);
+		}else if(customVisual){
+			params = new URLVariables("option=vsRefinement"
+			+"&product_id="+_productsPerPage[selectedIndices[0]].product_id
+			+"&category="+_productsPerPage[selectedIndices[0]].category_id+"&pageLength=" + _pageLength.toString()
+			+"&firstPageReq=Y&lastPage=N");
+			loader.load("PSInterface/visualSearchController.php", params);
+		}else{
+			loader.load("PSInterface/productSearch.php",params);
+		}
+		
+		
+		
+		///Alert.show(params.toString());
+	}
+	
 }
 
 private function sortHandler(e:MenuEvent):void{
@@ -268,12 +375,16 @@ private function sortHandler(e:MenuEvent):void{
  **/
 private function itemClickHandler(e:Event):void{		
 	var index:Object ;	
+
 	index = e.currentTarget.selectedIndices;
-			
+	
+	//contentBox.mainDisplay.searchResults.gridResult.se
+	//Alert.show(index.toString());
 	if(index == "")	index = 0;
 		
 	//contentBox.leftPanel.textSearch.details = _productsPerPage[index];	
 	contentBox.leftPanel.details = _productsPerPage[index];
+	contentBox.leftPanel.visualSearch.details = _productsPerPage[index];
 	contentBox.leftPanel.visualSearch.product = _productsPerPage[index];	
 	var imgs:ArrayCollection = new ArrayCollection();
 	imgs.addItemAt(prefixDirectory+_productsPerPage[index].primaryImage, 0);
@@ -282,8 +393,11 @@ private function itemClickHandler(e:Event):void{
 		imgs.addItemAt(prefixDirectory+_productsPerPage[index].variantImage[i], i+1);
 
 	contentBox.leftPanel.images = new ArrayCollection();
+	contentBox.leftPanel.visualSearch.images = new ArrayCollection();
 	contentBox.leftPanel.currentImgId = 0;
 	contentBox.leftPanel.images = imgs;
+	contentBox.leftPanel.visualSearch.currentImgId = 0;
+	contentBox.leftPanel.visualSearch.images = imgs;
 	
 } 
 
@@ -301,74 +415,330 @@ private function addToFavouriteHandler(event:FavouriteEvent):void{
 
 //============================== VISUAL SEARCH ===============================================
 
-private function VSHandler(e:FlexEvent):void{
-	e.currentTarget.searchVisual.addEventListener(FlexEvent.BUTTON_DOWN, VisualSearchHandler);
-	e.currentTarget.ColorPick.addEventListener(ColorPickerEvent.CHANGE,colorSet);
-}
-private function VisualSearchHandler(e:FlexEvent):void{
-	
-	p_id = contentBox.leftPanel.visualSearch.product.db_id;
-	c_id = contentBox.leftPanel.visualSearch.product.category;
-	_query = "Visual Search";
-	
-	//Alert.show("Slider Value :" + contentBox.leftPanel.visualSearch.S_color.value);
-//	Alert.show("id="+p_id +"category="+c_id);
+private function vsButtonHandler(e:FlexEvent):void{	
+	p_id = contentBox.leftPanel.visualSearch.product.product_id;
+	c_id = contentBox.leftPanel.visualSearch.product.category_id;
+	_categorySearch = false;
 	visual = true;
-	CustomVisual=false;
+	customVisual=false;
 	contentBox.mainDisplay.sortBut.enabled = false;
-	//Alert.show("Search button prress");
-	var params:URLVariables = new URLVariables("id="+p_id +"&category="+c_id+ "&page=" + _pageNo.toString() 
-		+"&pageLength="  + _pageLength.toString() );
-	loader.load("Controller/ConnectSocket.php", params);
-	
-	
-	
-	//contentBox.mainDisplay.page.text= "1";
-	//contentBox.mainDisplay.searchResults.results = null;
+	//Alert.show("VisualSearchHandler ------- Search button prress");
+	var params:URLVariables = new URLVariables("option=vsButtonClick&product_id="+p_id
+		+"&category="+c_id+"&pageLength=" + _pageLength.toString()
+		+"&firstPageReq=Y&lastPage=N");
+	loader.load("PSInterface/visualSearchController.php", params);	
 }
 
+private function vsSearchResultHandler(e:VSSearchResultEvent):void{	
+	_totalResults = uint(e.xmlResult.total);
+	//If no result found, do not procedd
+	if(_totalResults!=0){		
+		myXMLList = new XMLList(e.xmlResult.products.item);		
+		if(mainView.selectedIndex == 2 && e.xmlResult.firstPage == "Y"){
+			_pageNo = 1;
+			//contentBox.mainDisplay.searchResults.shopWindow.selectedIndex = 0;
+			contentBox.mainDisplay.searchResults.setResults(null);			
+			_products = new XMLListCollection(myXMLList);
+			
+			//Setting display products based on page hits
+			_pageLength = Number(contentBox.mainDisplay.pageHits.selectedLabel);
+			_previousPageStop = 0;  //reset	
+			_previousPageStart = 0; //reset	
+			_previousPageStop += _pageLength;
+			
+			_currentPage = 1;		
+			_totalPages = (Math.ceil(_totalResults/_pageLength));
+
+			_productsPerPage = new ArrayCollection();
+			if(_products.length <= _pageLength){
+				for(var j:uint; j < _products.length; j++){
+					_productsPerPage.addItem(_products.getItemAt(j));
+				}
+			
+			}else{
+				for(var j:uint; j < _pageLength; j++){
+					_productsPerPage.addItem(_products.getItemAt(j));
+				}
+			}
+			if(_pageLength==20){
+				contentBox.mainDisplay.searchResults.gridResult.rowHeight = 250;
+				contentBox.mainDisplay.searchResults.gridResult.columnWidth = 250;
+				contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 150;
+				contentBox.mainDisplay.searchResults.itemImageSizeListResult = 150;
+			}else{
+				contentBox.mainDisplay.searchResults.gridResult.rowHeight = 150;
+				contentBox.mainDisplay.searchResults.gridResult.columnWidth = 150;
+				contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 80;
+				contentBox.mainDisplay.searchResults.itemImageSizeListResult = 100;
+			}
+			//Assign data to searchResults' components
+			contentBox.mainDisplay.searchResults.setResults(_productsPerPage);
+			contentBox.mainDisplay.searchResults.setResultPopupPage(_productsPerPage);
+			contentBox.mainDisplay.page.text= _currentPage.toString();
+			//This part is to passing neccessary data to productZoom
+			//So that ProductZoom can navigate pages by itself
+			contentBox.mainDisplay.searchResults.setProductsList(_products);
+			contentBox.mainDisplay.searchResults.totalResults = _totalResults; 
+			contentBox.mainDisplay.searchResults.totalPages = _totalPages;        
+			contentBox.mainDisplay.searchResults.currentPage = _currentPage;	
+			contentBox.mainDisplay.searchResults.pageLength = _pageLength;
+			contentBox.mainDisplay.searchResults.previousPageStop =  _previousPageStop;
+			contentBox.mainDisplay.searchResults.previousPageStart = _previousPageStart;
+				
+			/*-------------------------------------------------------------------------------*/
+			//Use first result as data for text search box
+			var imgs:ArrayCollection = new ArrayCollection();
+			imgs.addItemAt(prefixDirectory+_productsPerPage.getItemAt(0).primaryImage,0);	
+			for(var k:uint = 0; k < _productsPerPage.getItemAt(0).variantImage.length(); k++)
+				imgs.addItem(prefixDirectory+_productsPerPage.getItemAt(0).variantImage[k]);
+
+			//contentBox.leftPanel.details = _productsPerPage.getItemAt(0);	
+			//contentBox.leftPanel.images = imgs;
+			contentBox.leftPanel.visualSearch.details = _productsPerPage.getItemAt(0);	
+			contentBox.leftPanel.visualSearch.images = imgs;
+			/*-------------------------------------------------------------------------------*/
+						
+			if(_totalPages <= 1){
+				contentBox.mainDisplay.nextPage.enabled = false;
+				contentBox.mainDisplay.prevPage.enabled = false;							
+			}
+			else
+				contentBox.mainDisplay.nextPage.enabled = true;	
+			/*-------------------------------------------------------------------------------*/
+			contentBox.mainDisplay.Nopage.text = " of " + _totalPages + " Pages";	
+			contentBox.mainDisplay.searchResults.statusBar.text = "Found: " 
+					+ _totalResults.toString() +  " matches in " 
+					+ e.xmlResult.searchTime + " sec for query '"+_query+"'";					
+													
+		}else{
+			for(var i:uint = 0; i < myXMLList.length(); i++){
+				//trace("Primary Image " + i.toString()+ " " + prefixDirectory+myXMLList[i].primaryImage);				
+				_products.addItem(myXMLList[i]);			
+			}
+		}
+		
+		/*-------------------------------------------------------------------------------*/
+		//Retrieving the remaining of search results		
+		//Retrieving the remaining of vs search results				
+		if(e.xmlResult.finished == "N"){					
+			if(_pageNo == _totalPages-1){
+				if(_totalResults-_products.length>=_pageLength){
+					getAllVSResultLeft(_products.length,_products.length+_pageLength, "Y");
+				}else{
+					getAllVSResultLeft(_products.length,_totalResults, "Y");
+				}
+				
+			}else{
+				getAllVSResultLeft(_products.length,_products.length+_pageLength, "N");
+			}
+			_pageNo++;
+		}	
+	}else{
+		Alert.show("Sorry! No item has been found. Please try another query!");
+	}
+	
+	if(_categories == null)
+		getCategories();	
+}
+private function getAllVSResultLeft(startIndex:uint, stopIndex:uint, lastPage:String):void{
+	var params:URLVariables = new URLVariables("option=vsDragDrop&search_index="+headerBox.cateSelect.selectedLabel
+		+"&firstPageReq=N&startIndex="+startIndex+"&stopIndex="+stopIndex+"&lastPage="+lastPage);
+	//loader.load("/AWSJavaCrawler/productSearch.htm",params);
+	loader.load("PSInterface/visualSearchController.php",params);		
+	//loader.load("http://localhost:8084/AWSJavaCrawler/productSearch.htm",params);
+}
 //=============================== COlOR SET =================================================
 private function colorSet(e:ColorPickerEvent):void{
 	ranking = true;
 	var drawColor:uint = e.color;
 	var hexColor:String=drawColor.toString(16);
 	
-	e.currentTarget.selectedColor=0;
+	//e.currentTarget.selectedColor=0;
 	
-	if (hexColor.length == 1)
-		hexColor="000000";
-	else if (hexColor.length == 4) 
-		hexColor="00"+hexColor;
-	else if (hexColor.length == 2) 
-		hexColor="0000"+hexColor;
+	if (hexColor.length == 1)hexColor="000000";
+	else if (hexColor.length == 4) hexColor="00"+hexColor;
+	else if (hexColor.length == 2) hexColor="0000"+hexColor;
 	
 	r=parseInt(hexColor.substr(0,2),16).toString();
 	g=parseInt(hexColor.substr(2,2),16).toString();
 	b=parseInt(hexColor.substr(4,2),16).toString();
-
+	
+	//Alert.show("hello " + r +" "+ g+" "+b);
+	//p_id = contentBox.leftPanel.visualSearch.product.db_id;
+	contentBox.mainDisplay.page.text ="1";
+	var params:URLVariables = new URLVariables("option=byColor"
+			+"&red="+ r+"&green="+g+"&blue="+ b+"&pageLength=" + _pageLength.toString()
+			+"&firstPageReq=Y&lastPage=N");
 	if(visual==true){
-		var params:URLVariables = new URLVariables("id="+p_id +"&category="+c_id +"&color=-1" +"&red="+ r+"&green="+g
-			+"&blue="+ b+ "&page=" + _pageNo.toString() +"&pageLength="  + _pageLength.toString());
-		loader.load("Controller/ConnectSocket.php", params);
-	}else if(CustomVisual==true)
-	{
-		var params:URLVariables = new URLVariables("feature="+upload.item[0].feature+"&color=-97"
-			+"&red="+ r+"&green="+g+"&blue="+ b+ "&page=" + _pageNo.toString() 
-			+"&pageLength="  + _pageLength.toString());
-		loader.load("Controller/ConnectSocket.php", params);
-	}
-	else
-	{
-		Alert.show("This function is only avaliable after a visual search is executed");
+		//var params:URLVariables = new URLVariables("id="+p_id +"&category="+c_id +"&color=-1" +"&red="+ r+"&green="+g+"&blue="+ b+ "&page=" + pageNo.toString() +"&pageLength="  + pageLength.toString());
+		loader.load("PSInterface/visualSearchController.php", params);
+	}else if(customVisual==true){
+		//var params:URLVariables = new URLVariables("feature="+upload.item[0].feature+"&color=-97"+"&red="+ r+"&green="+g+"&blue="+ b+ "&page=" + pageNo.toString() +"&pageLength="  + pageLength.toString());
+		loader.load("PSInterface/imageUploadSearchController.php", params);
+	}else{
+		//Alert.show("This function is only avaliable after a visual search is executed");
+		
+		loader.load("PSInterface/productSearch.php", params);		
 	}	
 }
+private function csSearchResultHandler(e:ColorSearchResultEvent){
+	_totalResults = uint(e.xmlResult.total);
+	//If no result found, do not procedd
+	if(_totalResults!=0){		
+		myXMLList = new XMLList(e.xmlResult.products.item);		
+		if(mainView.selectedIndex == 2 && e.xmlResult.firstPage == "Y"){
+			_pageNo = 1;
+			//contentBox.mainDisplay.searchResults.shopWindow.selectedIndex = 0;
+			contentBox.mainDisplay.searchResults.setResults(null);			
+			_products = new XMLListCollection(myXMLList);
+			
+			//Setting display products based on page hits
+			_pageLength = Number(contentBox.mainDisplay.pageHits.selectedLabel);
+			_previousPageStop = 0;  //reset	
+			_previousPageStart = 0; //reset	
+			_previousPageStop += _pageLength;
+			
+			_currentPage = 1;		
+			_totalPages = (Math.ceil(_totalResults/_pageLength));
 
-//============================== UPLOADING =================================================
-private function init_upload(e:FlexEvent):void
-{		
-	e.currentTarget.UploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);		
+			_productsPerPage = new ArrayCollection();
+			if(_products.length <= _pageLength){
+				for(var j:uint; j < _products.length; j++){
+					_productsPerPage.addItem(_products.getItemAt(j));
+				}
+			
+			}else{
+				for(var j:uint; j < _pageLength; j++){
+					_productsPerPage.addItem(_products.getItemAt(j));
+				}
+			}
+			if(_pageLength==20){
+				contentBox.mainDisplay.searchResults.gridResult.rowHeight = 250;
+				contentBox.mainDisplay.searchResults.gridResult.columnWidth = 250;
+				contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 150;
+				contentBox.mainDisplay.searchResults.itemImageSizeListResult = 150;
+			}else{
+				contentBox.mainDisplay.searchResults.gridResult.rowHeight = 150;
+				contentBox.mainDisplay.searchResults.gridResult.columnWidth = 150;
+				contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 80;
+				contentBox.mainDisplay.searchResults.itemImageSizeListResult = 100;
+			}
+			//Assign data to searchResults' components
+			contentBox.mainDisplay.searchResults.setResults(_productsPerPage);
+			contentBox.mainDisplay.searchResults.setResultPopupPage(_productsPerPage);
+			contentBox.mainDisplay.page.text= _currentPage.toString();
+			//This part is to passing neccessary data to productZoom
+			//So that ProductZoom can navigate pages by itself
+			contentBox.mainDisplay.searchResults.setProductsList(_products);
+			contentBox.mainDisplay.searchResults.totalResults = _totalResults; 
+			contentBox.mainDisplay.searchResults.totalPages = _totalPages;        
+			contentBox.mainDisplay.searchResults.currentPage = _currentPage;	
+			contentBox.mainDisplay.searchResults.pageLength = _pageLength;
+			contentBox.mainDisplay.searchResults.previousPageStop =  _previousPageStop;
+			contentBox.mainDisplay.searchResults.previousPageStart = _previousPageStart;
+				
+			/*-------------------------------------------------------------------------------*/
+			//Use first result as data for text search box
+			var imgs:ArrayCollection = new ArrayCollection();
+			imgs.addItemAt(prefixDirectory+_productsPerPage.getItemAt(0).primaryImage,0);	
+			for(var k:uint = 0; k < _productsPerPage.getItemAt(0).variantImage.length(); k++)
+				imgs.addItem(prefixDirectory+_productsPerPage.getItemAt(0).variantImage[k]);
+
+			contentBox.leftPanel.details = _productsPerPage.getItemAt(0);	
+			contentBox.leftPanel.images = imgs;
+			/*-------------------------------------------------------------------------------*/
+						
+			if(_totalPages <= 1){
+				contentBox.mainDisplay.nextPage.enabled = false;
+				contentBox.mainDisplay.prevPage.enabled = false;							
+			}
+			else
+				contentBox.mainDisplay.nextPage.enabled = true;	
+			/*-------------------------------------------------------------------------------*/
+			contentBox.mainDisplay.Nopage.text = " of " + _totalPages + " Pages";	
+			contentBox.mainDisplay.searchResults.statusBar.text = "Found: " 
+					+ _totalResults.toString() +  " matches in " 
+					+ e.xmlResult.searchTime + " sec for query '"+_query+"'";					
+													
+		}else{
+			for(var i:uint = 0; i < myXMLList.length(); i++){
+				//trace("Primary Image " + i.toString()+ " " + prefixDirectory+myXMLList[i].primaryImage);				
+				_products.addItem(myXMLList[i]);			
+			}
+		}
+		
+		/*-------------------------------------------------------------------------------*/
+		//Retrieving the remaining of search results		
+		//Retrieving the remaining of vs search results				
+		if(e.xmlResult.finished == "N"){					
+			if(_pageNo == _totalPages-1){
+				if(_totalResults-_products.length>=_pageLength){
+					getAllCSResultLeft(_products.length,_products.length+_pageLength, "Y");
+				}else{
+					getAllCSResultLeft(_products.length,_totalResults, "Y");
+				}
+				
+			}else{
+				getAllCSResultLeft(_products.length,_products.length+_pageLength, "N");
+			}
+			_pageNo++;
+		}	
+	}else{
+		Alert.show("Sorry! No item has been found. Please try another query!");
+	}
+	
+	if(_categories == null)
+		getCategories();
 }
-
+private function getAllCSResultLeft(startIndex:uint, stopIndex:uint, lastPage:String):void{
+	var params:URLVariables = new URLVariables("option=byColor&search_index="+headerBox.cateSelect.selectedLabel
+		+"&firstPageReq=N&startIndex="+startIndex+"&stopIndex="+stopIndex+"&lastPage="+lastPage);
+	if(visual){		
+		loader.load("PSInterface/visualSearchController.php",params);
+	}else if(customVisual){
+		
+	}else{		
+		loader.load("PSInterface/productSearch.php",params);
+	}
+			
+	//loader.load("http://localhost:8084/AWSJavaCrawler/productSearch.htm",params);
+}
+//============================== UPLOADING =================================================
+/*private function init_upload():void
+{		
+	//e.currentTarget.UploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);	
+	contentBox.leftPanel.UploadSearch.imageUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,browseAndUpload);
+	contentBox.leftPanel.UploadSearch.urlUploadButton.addEventListener(FlexEvent.BUTTON_DOWN,UrlUpload);
+	contentBox.leftPanel.UploadSearch.urlMethod.addEventListener(ResultEvent.RESULT,handleXML);	
+}*/
+private function vsUrlImageUploadHandler(e:FlexEvent):void
+{
+	contentBox.leftPanel.visualSearch.urlMethod.send();
+}
+private function vsUrlImageUploadXMLHandler(event:ResultEvent):void
+{
+   var uploadXMLResult:XML = XML( event.result );
+   //contentBox.leftPanel.UploadSearch.U_image.source = upload.item.url;
+   contentBox.leftPanel.visualSearch.vsImageQuery.load(uploadXMLResult.item.url);
+   contentBox.leftPanel.visualSearch.url.text="Pls Enter URL or Select an image";
+   doUploadVisualSearch(uploadXMLResult.item.url);
+}
+/*private function UrlUpload(e:FlexEvent):void
+{
+	//var url:Object = contentBox.leftPanel.UploadSearch.url.text;	
+	contentBox.leftPanel.UploadSearch.urlMethod.send();
+}	*/		
+ public function handleXML(event:ResultEvent):void
+{
+   var uploadXMLResult:XML = XML( event.result );
+   //Alert.show(uploadXMLResult.toString());
+   //contentBox.leftPanel.UploadSearch.U_image.source = upload.item.url;
+   //contentBox.leftPanel.UploadSearch.U_image.load(uploadXMLResult.item.url);
+   //contentBox.leftPanel.UploadSearch.url.text="Pls Enter URL or Select an image";
+   contentBox.leftPanel.visualSearch.vsImageQuery.load(uploadXMLResult.item.ur);
+   contentBox.leftPanel.visualSearch.url.text="Pls Enter URL or Select an image";
+   doUploadVisualSearch(uploadXMLResult.item.url);
+}
 private function browseAndUpload(e:FlexEvent):void 			
 {		
 	fileref.addEventListener(Event.SELECT,fileRef_select);
@@ -376,8 +746,7 @@ private function browseAndUpload(e:FlexEvent):void
 	fileref.addEventListener(Event.COMPLETE,fileRef_complete);
 	fileref.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA,serverResponse);
 	var imageTypes:FileFilter = new FileFilter("Images (*.jpg, *.jpeg, *.gif, *.png)", "*.jpg; *.jpeg; *.gif; *.png");
-    fileref.browse(new Array(imageTypes));
-   
+    fileref.browse(new Array(imageTypes));   
 }
 
 /**
@@ -402,15 +771,12 @@ private function fileRef_select(evt:Event):void {
 	        sendVars.action = "upload";
 	        
 	        var request:URLRequest = new URLRequest();
-	       // request.data = sendVars;
-	        request.url = _strUploadScript;
-	        request.method = URLRequestMethod.POST;
-	      
+	        request.data = sendVars;
+	        request.url = "PSInterface/upload.php";;
+	        request.method = URLRequestMethod.POST;	       	
 	       	fileref.upload(request,"Filedata",false);
-	 
-	        
-	    }catch (err:Error) 
-	    {
+	 	        
+	    }catch (err:Error){
 	        Alert.show( "ERROR: zero-byte file");
 	  	}
 	 }else{
@@ -425,9 +791,7 @@ private function onUploadCanceled(event:Event):void {
     fileref.cancel();        
 }
 private function fileRef_progress(Event:ProgressEvent):void {
-	 var numPerc:Number = Math.round((Number(Event.bytesLoaded) / Number(Event.bytesTotal)) * 100);
-
-	
+	 var numPerc:Number = Math.round((Number(Event.bytesLoaded) / Number(Event.bytesTotal)) * 100);	
     _winProgress.progBar.setProgress(numPerc, 100);
     _winProgress.txtFile.text = fileref.name;
     _winProgress.progBar.label = numPerc + "%";
@@ -440,9 +804,11 @@ private function fileRef_progress(Event:ProgressEvent):void {
 
 }
 private function serverResponse(event:DataEvent):void {
-   	upload = XML( event.data );
-   	contentBox.leftPanel.UploadSearch.U_image.source = upload.item[0].url;
-	CustomVisualSearch();	
+   	var uploadXMLResult:XML = XML( event.data );   	
+   	//Alert.show(uploadXMLResult);
+   	//contentBox.leftPanel.UploadSearch.U_image.source = uploadXMLResult.item[0].url;
+   	contentBox.leftPanel.visualSearch.vsImageQuery.source = uploadXMLResult.item[0].url;
+	doUploadVisualSearch(uploadXMLResult.item[0].url);	
 }
 
 private function fileRef_complete(evt:Event):void {
@@ -450,21 +816,138 @@ private function fileRef_complete(evt:Event):void {
 	Alert.show("File(s) have been uploaded.", "Upload successful");  
 }
 
-public function test(e:FlexEvent):void {
-	var request:URLRequest = new URLRequest(_strUploadScript);
-	navigateToURL(request,"_blank");
-}
-
-public function CustomVisualSearch():void{
-	CustomVisual = true;
+private function doUploadVisualSearch(imageURL:String):void{
+	//Alert.show(imageURL);	
 	visual = false;
+	customVisual=true;
 	contentBox.mainDisplay.sortBut.enabled = false;
-	_query = "Visual Search";
-	var params:URLVariables = new URLVariables("feature="+upload.item[0].feature
-		+ "&page=" + _pageNo.toString() +"&pageLength="  + _pageLength.toString());
-	loader.load("Controller/ConnectSocket.php", params);	
+			
+	contentBox.mainDisplay.sortBut.enabled = false;
+	var params:URLVariables = new URLVariables("option=imageUploadSearch"
+		+"&pageLength=" + _pageLength.toString() + "&search_index="+contentBox.leftPanel.visualSearch.upcateSelect.selectedLabel
+		+"&firstPageReq=Y&lastPage=N");
+		//Alert.show(params.toString());
+	loader.load("PSInterface/imageUploadSearchController.php", params);
 }		
 
+private function usSearchResultHandler(e:USSearchResultEvent):void{
+	_totalResults = uint(e.xmlResult.total);
+	//If no result found, do not procedd
+	if(_totalResults!=0){		
+		myXMLList = new XMLList(e.xmlResult.products.item);		
+		if(mainView.selectedIndex == 2 && e.xmlResult.firstPage == "Y"){
+			_pageNo = 1;
+			//contentBox.mainDisplay.searchResults.shopWindow.selectedIndex = 0;
+			contentBox.mainDisplay.searchResults.setResults(null);			
+			_products = new XMLListCollection(myXMLList);
+			
+			//Setting display products based on page hits
+			_pageLength = Number(contentBox.mainDisplay.pageHits.selectedLabel);
+			_previousPageStop = 0;  //reset	
+			_previousPageStart = 0; //reset	
+			_previousPageStop += _pageLength;
+			
+			_currentPage = 1;		
+			_totalPages = (Math.ceil(_totalResults/_pageLength));
+
+			_productsPerPage = new ArrayCollection();
+			if(_products.length <= _pageLength){
+				for(var j:uint; j < _products.length; j++){
+					_productsPerPage.addItem(_products.getItemAt(j));
+				}
+			
+			}else{
+				for(var j:uint; j < _pageLength; j++){
+					_productsPerPage.addItem(_products.getItemAt(j));
+				}
+			}
+			if(_pageLength==20){
+				contentBox.mainDisplay.searchResults.gridResult.rowHeight = 250;
+				contentBox.mainDisplay.searchResults.gridResult.columnWidth = 250;
+				contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 150;
+				contentBox.mainDisplay.searchResults.itemImageSizeListResult = 150;
+			}else{
+				contentBox.mainDisplay.searchResults.gridResult.rowHeight = 150;
+				contentBox.mainDisplay.searchResults.gridResult.columnWidth = 150;
+				contentBox.mainDisplay.searchResults.itemImageSizeGridResult = 80;
+				contentBox.mainDisplay.searchResults.itemImageSizeListResult = 100;
+			}
+			//Assign data to searchResults' components
+			contentBox.mainDisplay.searchResults.setResults(_productsPerPage);
+			contentBox.mainDisplay.searchResults.setResultPopupPage(_productsPerPage);
+			contentBox.mainDisplay.page.text= _currentPage.toString();
+			//This part is to passing neccessary data to productZoom
+			//So that ProductZoom can navigate pages by itself
+			contentBox.mainDisplay.searchResults.setProductsList(_products);
+			contentBox.mainDisplay.searchResults.totalResults = _totalResults; 
+			contentBox.mainDisplay.searchResults.totalPages = _totalPages;        
+			contentBox.mainDisplay.searchResults.currentPage = _currentPage;	
+			contentBox.mainDisplay.searchResults.pageLength = _pageLength;
+			contentBox.mainDisplay.searchResults.previousPageStop =  _previousPageStop;
+			contentBox.mainDisplay.searchResults.previousPageStart = _previousPageStart;
+				
+			/*-------------------------------------------------------------------------------*/
+			//Use first result as data for text search box
+			var imgs:ArrayCollection = new ArrayCollection();
+			imgs.addItemAt(prefixDirectory+_productsPerPage.getItemAt(0).primaryImage,0);	
+			for(var k:uint = 0; k < _productsPerPage.getItemAt(0).variantImage.length(); k++)
+				imgs.addItem(prefixDirectory+_productsPerPage.getItemAt(0).variantImage[k]);
+
+			//contentBox.leftPanel.details = _productsPerPage.getItemAt(0);	
+			//contentBox.leftPanel.images = imgs;
+			contentBox.leftPanel.visualSearch.details = _productsPerPage.getItemAt(0);	
+			contentBox.leftPanel.visualSearch.images = imgs;
+			/*-------------------------------------------------------------------------------*/
+						
+			if(_totalPages <= 1){
+				contentBox.mainDisplay.nextPage.enabled = false;
+				contentBox.mainDisplay.prevPage.enabled = false;							
+			}
+			else
+				contentBox.mainDisplay.nextPage.enabled = true;	
+			/*-------------------------------------------------------------------------------*/
+			contentBox.mainDisplay.Nopage.text = " of " + _totalPages + " Pages";	
+			contentBox.mainDisplay.searchResults.statusBar.text = "Found: " 
+					+ _totalResults.toString() +  " matches in " 
+					+ e.xmlResult.searchTime + " sec for query '"+_query+"'";					
+													
+		}else{
+			for(var i:uint = 0; i < myXMLList.length(); i++){
+				//trace("Primary Image " + i.toString()+ " " + prefixDirectory+myXMLList[i].primaryImage);				
+				_products.addItem(myXMLList[i]);			
+			}
+		}
+		
+		/*-------------------------------------------------------------------------------*/
+		//Retrieving the remaining of search results		
+		//Retrieving the remaining of vs search results				
+		if(e.xmlResult.finished == "N"){					
+			if(_pageNo == _totalPages-1){
+				if(_totalResults-_products.length>=_pageLength){
+					getAllUSResultLeft(_products.length,_products.length+_pageLength, "Y");
+				}else{
+					getAllUSResultLeft(_products.length,_totalResults, "Y");
+				}
+				
+			}else{
+				getAllUSResultLeft(_products.length,_products.length+_pageLength, "N");
+			}
+			_pageNo++;
+		}	
+	}else{
+		Alert.show("Sorry! No item has been found. Please try another query!");
+	}
+	
+	if(_categories == null)
+		getCategories();
+}
+private function getAllUSResultLeft(startIndex:uint, stopIndex:uint, lastPage:String):void{
+	var params:URLVariables = new URLVariables("option=imageUploadSearch"
+		+"&firstPageReq=N&startIndex="+startIndex+"&stopIndex="+stopIndex+"&lastPage="+lastPage);
+	//loader.load("/AWSJavaCrawler/productSearch.htm",params);
+	loader.load("PSInterface/imageUploadSearchController.php",params);		
+	//loader.load("http://localhost:8084/AWSJavaCrawler/productSearch.htm",params);
+}
 //============================== DRAG & DROP =================================================
 
 
@@ -474,39 +957,42 @@ private function visualSearchDragEnterHandler(e:DragEvent):void{
 	}
 }
 
-private function visualSearchDragDropHandler(e:DragEvent):void{
-	Alert.show("visualSearchDragDropHandler");
+private function visualSearchDragDropHandler(e:DragEvent):void{	
 	var data:Object = e.dragSource.dataForFormat("product data");
-	contentBox.mainDisplay.page.text = "1";
+	contentBox.mainDisplay.page.text = "1";	
 	if(contentBox.leftPanel.tabNavi.selectedIndex == 0 ){
 		contentBox.leftPanel.details = data;
 		contentBox.leftPanel.visualSearch.product = data ;
-
+		contentBox.leftPanel.visualSearch.vsImageQuery.source = "p_images/"+ data.primaryImage;
 		contentBox.leftPanel.validateNow();
 		var imgs:ArrayCollection = new ArrayCollection();
-		imgs.addItem(data.primaryImage);
-		//Alert.show(products[index].variantImage.length().toString());
-		for(var i:uint = 0; i< data.variantImage.length(); i++)
+		imgs.addItem(data.primaryImage);		
+		for(var i:uint = 0; i< data.variantImage.length(); i++){
 			imgs.addItem(data.variantImage[i]);
-	
-		//Alert.show(contentBox.leftPanel.textSearch.images.toString());
+		}
 		contentBox.leftPanel.images = imgs;
 		contentBox.leftPanel.currentImgId = 0;
 	}
 	else{
 		contentBox.leftPanel.visualSearch.product = data
 	}
+	//Alert.show("id="+data.product_id +"category="+data.category_id);
 	_query = "Visual Search";
+	_categorySearch = false;
 	visual = true;
-	CustomVisual=false;
+	customVisual=false;
 	ranking =false;
 	contentBox.mainDisplay.sortBut.enabled = false;
-	p_id = data.db_id;
-	c_id = data.category;
-	session=0;
-	//var params:URLVariables = new URLVariables("session=" +session + 
-	//"&id="+p_id+"&category="+c_id+ "&page=0" +"&pageLength="  + _pageLength);
-	//loader.load("Controller/ConnectSocket.php", params);	
+	
+	/*var params:URLVariables = new URLVariables("action=vsDragDrop&product_id="+data.product_id
+		+"&category="+data.category_id+"&pageLength=" + _pageLength.toString());*/
+	var params:URLVariables = new URLVariables("option=vsDragDrop&product_id="+data.product_id
+		+"&category="+data.category_id+"&pageLength=" + _pageLength.toString()
+		+"&firstPageReq=Y&lastPage=N");
+	loader.load("PSInterface/visualSearchController.php", params);	
+	//loader.load("Controller/ConnectSocket.php", params);
+	//loader.load("/AWSJavaCrawler/socketHandler.htm", params);
+	//loader.load("http://localhost:8084/AWSJavaCrawler/socketHandler.htm", params);
 }
 /**
  * To handle product dragged into favourite list
